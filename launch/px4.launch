@@ -10,9 +10,9 @@
 	<arg name="fcu_protocol" default="v2.0" />
 	<arg name="respawn_mavros" default="true" />
 
-	<arg name="mavros_ns" default="/"/>
+	<arg name="mavros_ns" default="/"/> <!-- namespace -->
 
-	<include file="$(find iq_sim)/launch/mavros_node.launch">
+	<include file="$(find iq_sim)/launch/mavros_node.launch"><!-- Launch mavros_node in iq_sim which is fine  -->
 		<arg name="pluginlists_yaml" value="$(find mavros)/launch/px4_pluginlists.yaml" />
 		<arg name="config_yaml" value="$(find mavros)/launch/px4_config.yaml" />
 
