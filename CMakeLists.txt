@@ -213,3 +213,9 @@ include_directories(
 
 add_executable(multi_square src/multi_square.cpp)
 target_link_libraries(multi_square ${catkin_LIBRARIES})
+
+add_executable(waypoints src/waypoints.cpp)
+target_link_libraries(waypoints ${catkin_LIBRARIES})
+
+
+
