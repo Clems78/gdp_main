@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+        <machine
+                name="jetson1-desktop"
+                address="192.168.0.199"
+                env-loader="/opt/ros/melodic/env_jetson_1.sh"
+                default="true"
+                user="jetson1"
+        />
+        <!-- Include your inner launch file -->
+        <node machine="jetson1-desktop" pkg="rospy_tutorials" name="talker" type="talker" output="screen"/>
+</launch>
