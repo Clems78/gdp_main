@@ -217,5 +217,8 @@ target_link_libraries(multi_square ${catkin_LIBRARIES})
 add_executable(waypoints src/waypoints.cpp)
 target_link_libraries(waypoints ${catkin_LIBRARIES})
 
+add_executable(sub src/sub.cpp)
+target_link_libraries(sub ${catkin_LIBRARIES})
+
 
 
