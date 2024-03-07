@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+        <machine
+                name="jetson1-desktop"
+                address="192.168.0.199"
+                env-loader="/opt/ros/melodic/env_jetson_1.sh"
+                default="true"
+                user="jetson1"
+        />
+        <!-- Include your inner launch file -->
+        <include machine="jetson1-desktop" file="/home/jetson1/catkin_ws/src/darknet_ros/darknet_ros/launch/darknet_ros.launch" />
+
+</launch>
