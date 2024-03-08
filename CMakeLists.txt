@@ -214,11 +214,20 @@ include_directories(
 add_executable(multi_square src/multi_square.cpp)
 target_link_libraries(multi_square ${catkin_LIBRARIES})
 
-add_executable(waypoints src/waypoints.cpp)
-target_link_libraries(waypoints ${catkin_LIBRARIES})
 
 add_executable(sub src/sub.cpp)
 target_link_libraries(sub ${catkin_LIBRARIES})
 
+add_executable(search_detect_land_g src/search_detect_land_g.cpp)
+target_link_libraries(search_detect_land_g ${catkin_LIBRARIES})
 
 
+################
+## REAL FLIGHT##
+################
+
+add_executable(waypoints src/Flight_Arena_Test/waypoints.cpp)
+target_link_libraries(waypoints ${catkin_LIBRARIES})
+
+add_executable(search_detect_land_fl src/Flight_Arena_Test/search_detect_land_fl.cpp)
+target_link_libraries(search_detect_land_fl ${catkin_LIBRARIES})
