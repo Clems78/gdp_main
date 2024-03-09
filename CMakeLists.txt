@@ -221,6 +221,12 @@ target_link_libraries(sub ${catkin_LIBRARIES})
 add_executable(search_detect_land_g src/search_detect_land_g.cpp)
 target_link_libraries(search_detect_land_g ${catkin_LIBRARIES})
 
+add_executable(main src/main.cpp)
+target_link_libraries(main ${catkin_LIBRARIES})
+
+add_executable(lla_test src/lla_test.cpp)
+target_link_libraries(lla_test ${catkin_LIBRARIES})
+
 
 ################
 ## REAL FLIGHT##
@@ -231,3 +237,5 @@ target_link_libraries(waypoints ${catkin_LIBRARIES})
 
 add_executable(search_detect_land_fl src/Flight_Arena_Test/search_detect_land_fl.cpp)
 target_link_libraries(search_detect_land_fl ${catkin_LIBRARIES})
+
+
