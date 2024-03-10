@@ -227,6 +227,12 @@ target_link_libraries(main ${catkin_LIBRARIES})
 add_executable(lla_test src/lla_test.cpp)
 target_link_libraries(lla_test ${catkin_LIBRARIES})
 
+add_executable(tracked_vehicles src/tracked_vehicles.cpp)
+target_link_libraries(tracked_vehicles ${catkin_LIBRARIES})
+
+add_executable(square src/square.cpp)
+target_link_libraries(square ${catkin_LIBRARIES})
+
 
 ################
 ## REAL FLIGHT##
