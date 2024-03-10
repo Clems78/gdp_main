@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 	{
 		ros::spinOnce();
 		rate.sleep();
-		if(check_waypoint_reached(.3) == 1)
+		if(check_waypoint_reached(.3, 5) == 1)
 		{
 			if (counter < waypointList.size())
 			{
