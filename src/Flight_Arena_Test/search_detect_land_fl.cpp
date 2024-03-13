@@ -11,6 +11,9 @@ int height = 480;
 int img_center_x = width/2;
 int img_center_y = height/2;
 
+//Target alt
+int target_alt = 1.2;
+
 int mode = 0;
 
 void detection_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg) // callback function
@@ -21,9 +24,9 @@ void detection_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg) // callb
 
 		string boxe_name = msg->bounding_boxes[i].Class.c_str();
 
-		if (boxe_name == "truck") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
+		if (boxe_name == "car") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
 		{
-			ROS_INFO("%s detected", msg->bounding_boxes[i].Class.c_str());
+			ROS_INFO("Target detected!", msg->bounding_boxes[i].Class.c_str());
 			mode = 1;
 
 			//Extract the coordinates of the boxes
@@ -33,12 +36,12 @@ void detection_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg) // callb
 			int yMax = msg->bounding_boxes[i].ymax;
 
 			//Print information
-			ROS_INFO("Boxe number %ld", i);
-			ROS_INFO("xmin: %ld", xMin);
-			ROS_INFO("xmax: %ld", xMax);
-			ROS_INFO("ymin: %ld", yMin);
-			ROS_INFO("ymax: %ld", yMax);
-			ROS_INFO("id: %ld", msg->bounding_boxes[i].id);
+			// ROS_INFO("Boxe number %ld", i);
+			// ROS_INFO("xmin: %ld", xMin);
+			// ROS_INFO("xmax: %ld", xMax);
+			// ROS_INFO("ymin: %ld", yMin);
+			// ROS_INFO("ymax: %ld", yMax);
+			// ROS_INFO("id: %ld", msg->bounding_boxes[i].id);
 
 			//Get the center 
 			float bb_center_x = xMin + (xMax - xMin) / 2;
@@ -75,14 +78,34 @@ int main(int argc, char **argv) {
 	initialize_local_frame();
 
 	//request takeoff
-	takeoff(1.2);
+	takeoff(target_alt);
 
 	//specify some waypoints 
 	std::vector<gnc_api_waypoint> waypointList;
 	gnc_api_waypoint nextWayPoint;
 	nextWayPoint.x = 0;
 	nextWayPoint.y = 0;
-	nextWayPoint.z = 1.2;
+	nextWayPoint.z = target_alt;
+	nextWayPoint.psi = 0;
+	waypointList.push_back(nextWayPoint);
+	nextWayPoint.x = 2;
+	nextWayPoint.y = 0;
+	nextWayPoint.z = target_alt;
+	nextWayPoint.psi = 0;
+	waypointList.push_back(nextWayPoint);
+	nextWayPoint.x = 2;
+	nextWayPoint.y = 2;
+	nextWayPoint.z = target_alt;
+	nextWayPoint.psi = 0;
+	waypointList.push_back(nextWayPoint);
+	nextWayPoint.x = 0;
+	nextWayPoint.y = 2;
+	nextWayPoint.z = target_alt;
+	nextWayPoint.psi = 0;
+	waypointList.push_back(nextWayPoint);
+	nextWayPoint.x = 0;
+	nextWayPoint.y = 0;
+	nextWayPoint.z = target_alt;
 	nextWayPoint.psi = 0;
 	waypointList.push_back(nextWayPoint);
 
@@ -95,7 +118,7 @@ int main(int argc, char **argv) {
 		{
 			ros::spinOnce(); // Allows to continue processing main loop but still using callback information
 			rate.sleep(); // Ensure ros rate 
-			if(check_waypoint_reached(.3) == 1)
+			if(check_waypoint_reached(.5, 10) == 1)
 			{
 				if (counter < waypointList.size())
 				{

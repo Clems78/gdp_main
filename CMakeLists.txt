@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   iq_gnc
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -52,11 +53,12 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
+add_message_files(
+ FILES
+ CoordinateList.msg
 #   Message1.msg
 #   Message2.msg
-# )
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -73,10 +75,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs
 #   std_msgs  # Or other packages containing msgs
-# )
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -110,7 +113,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES gdp_main
-#  CATKIN_DEPENDS roscpp rospy
+   CATKIN_DEPENDS roscpp rospy geometry_msgs std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -232,6 +235,18 @@ target_link_libraries(lla_test ${catkin_LIBRARIES})
 
 add_executable(square src/square.cpp)
 target_link_libraries(square ${catkin_LIBRARIES})
+
+add_executable(uselocation src/uselocation.cpp)
+target_link_libraries(uselocation ${catkin_LIBRARIES})
+
+add_executable(waypoints_global src/waypoints_global.cpp)
+target_link_libraries(waypoints_global ${catkin_LIBRARIES})
+
+add_executable(relative_position src/relative_position.cpp)
+target_link_libraries(relative_position ${catkin_LIBRARIES})
+
+
+
 
 
 ################

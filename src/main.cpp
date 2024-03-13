@@ -144,6 +144,9 @@ int main(int argc, char **argv) {
 	//Getting global coordinate
 	ros::Subscriber pos_sub = n.subscribe("/mavros/global_position/global", 1, pos_cb);
 
+	//Getting coordinate of already tracked vehicle 
+	//ros::Subscriber already_tracked_sub = n.subscribe("/tracked")
+
 	// ros::Publisher pub = n.advertise<std_msgs::message-type>("created topic_name", 5);
 	// Publish the position of the tracked vechile on another node
 	tracked_vehicle_pos_pub = n.advertise<geometry_msgs::Point>("tracked_vehicle_pos", 1); //1000 is the queue size
