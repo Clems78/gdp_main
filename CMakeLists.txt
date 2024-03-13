@@ -227,8 +227,8 @@ target_link_libraries(main ${catkin_LIBRARIES})
 add_executable(lla_test src/lla_test.cpp)
 target_link_libraries(lla_test ${catkin_LIBRARIES})
 
-add_executable(tracked_vehicles src/tracked_vehicles.cpp)
-target_link_libraries(tracked_vehicles ${catkin_LIBRARIES})
+#add_executable(tracked_vehicles src/tracked_vehicles.cpp)
+#target_link_libraries(tracked_vehicles ${catkin_LIBRARIES})
 
 add_executable(square src/square.cpp)
 target_link_libraries(square ${catkin_LIBRARIES})
@@ -244,4 +244,5 @@ target_link_libraries(waypoints ${catkin_LIBRARIES})
 add_executable(search_detect_land_fl src/Flight_Arena_Test/search_detect_land_fl.cpp)
 target_link_libraries(search_detect_land_fl ${catkin_LIBRARIES})
 
-
+add_executable(uselocation src/uselocation.cpp)
+target_link_libraries(uselocation ${catkin_LIBRARIES})
