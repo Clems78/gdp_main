@@ -221,7 +221,7 @@ std::vector<TargetPoint> waypoints = {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "gnc_node");
     ros::NodeHandle nh;
-  //  initialize_local_frame();
+    initialize_local_frame();
 
     init_publisher_subscriber(nh);
     
@@ -229,12 +229,14 @@ int main(int argc, char **argv) {
     
     wait4connect();
     wait4start();
+
    // takeoff(1.7);
-    double latitude1 = -35.363261; // 示例纬度
-    double longitude1 = 149.16523; // 示例经度
-    double altitude1 = 585.2; // 起飞后的目标高度，单位为米
+    // double latitude1 = -35.363261; // 示例纬度
+    // double longitude1 = 149.16523; // 示例经度
+    // double altitude1 = 585.2; // 起飞后的目标高度，单位为米
 
     takeoff(1.2);
+
   // takeoff2(latitude1, longitude1,altitude1, nh);
  // set_global_takeoff_target1(latitude1,longitude1,altitude1,nh);
     ros::Rate rate(2.0); // 2 Hz
@@ -248,7 +250,7 @@ int main(int argc, char **argv) {
         ROS_INFO("Current distance to waypoint %lu: %f meters", current_waypoint_index, current_distance);
 
         // 检查是否到达目标点（例如，距离小于10米）
-        if (current_distance < 0.05) {
+        if (current_distance < 0.5) {
             ROS_INFO("Arrived at waypoint %lu.", current_waypoint_index);
             current_waypoint_index++; // 移动到下一个目标点
 
