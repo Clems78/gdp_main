@@ -14,7 +14,7 @@ int img_center_y = height/2;
 float p2m = 0.01;
 
 void detection_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg) // callback function
-{
+{	
 
 	for (int i=0; i<msg->bounding_boxes.size(); i++ ) // run on each bouding box that is in the message
 	{
@@ -22,7 +22,7 @@ void detection_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg) // callb
 
 		string boxe_name = msg->bounding_boxes[i].Class.c_str();
 
-		if (boxe_name == "chair") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
+		if (boxe_name == "car") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
 		{
 			//Extract the coordinates of the boxes
 			int xMin = msg->bounding_boxes[i].xmin;

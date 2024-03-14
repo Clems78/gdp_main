@@ -242,13 +242,6 @@ target_link_libraries(uselocation ${catkin_LIBRARIES})
 add_executable(waypoints_global src/waypoints_global.cpp)
 target_link_libraries(waypoints_global ${catkin_LIBRARIES})
 
-add_executable(relative_position src/relative_position.cpp)
-target_link_libraries(relative_position ${catkin_LIBRARIES})
-
-
-
-
-
 ################
 ## REAL FLIGHT##
 ################
@@ -258,6 +251,3 @@ target_link_libraries(waypoints ${catkin_LIBRARIES})
 
 add_executable(search_detect_land_fl src/Flight_Arena_Test/search_detect_land_fl.cpp)
 target_link_libraries(search_detect_land_fl ${catkin_LIBRARIES})
-
-add_executable(uselocation src/uselocation.cpp)
-target_link_libraries(uselocation ${catkin_LIBRARIES})

@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 	initialize_local_frame();
 
 	//request takeoff
-	takeoff(5);
+	takeoff(1.2);
 
 
 	//specify some waypoints 
