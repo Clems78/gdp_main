@@ -1,106 +1,86 @@
+#include <gnc_functions.hpp>
 #include <ros/ros.h>
-#include <mavros_msgs/CommandBool.h>
-#include <mavros_msgs/SetMode.h>
-#include <mavros_msgs/GlobalPositionTarget.h>
-#include <mavros_msgs/CommandTOL.h>
 #include <sensor_msgs/NavSatFix.h>
-#include <geographic_msgs/GeoPoseStamped.h>
+#include <vector>
 #include <cmath>
 
-// 假设这个头文件提供了所需的辅助函数如 init_publisher_subscriber(), wait4connect(), wait4start(), takeoff(), land()
-#include "gnc_functions.hpp"
+// 起飞点的经纬度常量
+const double TAKEOFF_LAT = -35.3631853;
+const double TAKEOFF_LON = 149.1652363;
 
-sensor_msgs::NavSatFix current_position;
+// 将经度和纬度差值转换为米
+void latLonToMeters(double lat, double lon, double& x, double& y) {
+    const double EARTH_RADIUS = 6378137.0; // 地球半径，单位为米
+    double lat_rad = lat * M_PI / 180.0;
+    double lon_rad = lon * M_PI / 180.0;
+    double takeoff_lat_rad = TAKEOFF_LAT * M_PI / 180.0;
+    double takeoff_lon_rad = TAKEOFF_LON * M_PI / 180.0;
+
+    // 计算纬度和经度的差值
+    double delta_lat = lat_rad - takeoff_lat_rad;
+    double delta_lon = lon_rad - takeoff_lon_rad;
+
+    // 转换为米
+    x = delta_lon * EARTH_RADIUS * cos(takeoff_lat_rad);
+    y = delta_lat * EARTH_RADIUS;
+}
 
 void globalPositionCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
-    current_position = *msg;
     ROS_INFO("Current GPS: [%f, %f, %f]", msg->latitude, msg->longitude, msg->altitude);
 }
 
-void set_global_position_target(double latitude, double longitude, double altitude, ros::NodeHandle& nh) {
-    ros::Publisher global_position_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("/mavros/setpoint_raw/global", 10);
-    
-    mavros_msgs::GlobalPositionTarget target;
-    target.coordinate_frame = mavros_msgs::GlobalPositionTarget::FRAME_GLOBAL_INT;
-    target.latitude = latitude;
-    target.longitude = longitude;
-    target.altitude = altitude;
-
-    global_position_pub.publish(target);
-}
-
-double calculate_distance(double lat1, double lon1, double lat2, double lon2) {
-    const double R = 6371000; // 地球半径，单位为米
-    double latRad1 = lat1 * M_PI / 180;
-    double latRad2 = lat2 * M_PI / 180;
-    double deltaLatRad = (lat2 - lat1) * M_PI / 180;
-    double deltaLonRad = (lon2 - lon1) * M_PI / 180;
-
-    double a = sin(deltaLatRad / 2) * sin(deltaLatRad / 2) +
-               cos(latRad1) * cos(latRad2) *
-               sin(deltaLonRad / 2) * sin(deltaLonRad / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-
-    double distance = R * c; // 最终距离
-    return distance;
-}
-struct TargetPoint {
-    double latitude;
-    double longitude;
-    double altitude;
-};
-
-std::vector<TargetPoint> waypoints = {
-    {-35.36326100  , 149.16508680 ,593.378677},  // 第一个目标点
-    {-35.36327800  ,149.16508900, 593.378677},  // 第二个目标点
-    {-35.36327290   ,149.16525380, 593.378677},  // 第三个目标点
-    {-35.36321200   ,149.16525460, 593.378677},  // 第四个目标点
-    {-35.36321160   ,149.16526730, 593.378677},  // 第五个目标点
-    {-35.36317460   ,149.16526520 ,593.378677},  // 第六个目标点
-    {-35.36317510   ,149.16522660, 593.378677},  // 第七个目标点
-    {-35.36324310   ,149.16522190, 593.378677},  // 第八个目标点
-    {-35.36324400   ,149.16508600, 593.378677},  // 第九个目标点
-      // 第十个目标点
-    // 可以继续添加更多目标点...
-};
-
-
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     ros::init(argc, argv, "gnc_node");
-    ros::NodeHandle nh;
+    ros::NodeHandle gnc_node("~");
 
-    init_publisher_subscriber(nh);
-    ros::Subscriber position_sub = nh.subscribe("/mavros/global_position/global", 10, globalPositionCallback);
-    
+    init_publisher_subscriber(gnc_node);
+    ros::Subscriber position_sub = gnc_node.subscribe("/mavros/global_position/global", 10, globalPositionCallback);
+
     wait4connect();
-    wait4start();
+    set_mode("GUIDED");
+    initialize_local_frame();
     takeoff(3);
 
-    ros::Rate rate(2.0); // 2 Hz
-    size_t current_waypoint_index = 0; // 当前目标点索引
+    // 目标点列表（经度，纬度，高度）
+    std::vector<std::tuple<double, double, double>> targetPoints = {
+    {-35.36326100, 149.16508680, 1.5},  // 第一个目标点
+    {-35.36327800, 149.16508900, 1.5},  // 第二个目标点
+    {-35.36327290, 149.16525380, 1.5},  // 第三个目标点
+    {-35.36321200, 149.16525460, 1.5},  // 第四个目标点
+    {-35.36321160, 149.16526730, 1.5},  // 第五个目标点
+    {-35.36317460, 149.16526520, 1.5},  // 第六个目标点
+    {-35.36317510, 149.16522660, 1.5},  // 第七个目标点
+    {-35.36324310, 149.16522190, 1.5},  // 第八个目标点
+    {-35.36324400, 149.16508600, 1.5},  // 第九个目标点nextWayPoint.psi也需要被设置
+    };
 
-    while(ros::ok() && current_waypoint_index < waypoints.size()) {
-        auto& target = waypoints[current_waypoint_index];
-        set_global_position_target(target.latitude, target.longitude, target.altitude, nh);
-
-        double current_distance = calculate_distance(current_position.latitude, current_position.longitude, target.latitude, target.longitude);
-        ROS_INFO("Current distance to waypoint %lu: %f meters", current_waypoint_index, current_distance);
-
-        // 检查是否到达目标点（例如，距离小于10米）
-        if (current_distance < 0.5) {
-            ROS_INFO("Arrived at waypoint %lu.", current_waypoint_index);
-            current_waypoint_index++; // 移动到下一个目标点
-
-            if (current_waypoint_index >= waypoints.size()) {
-                ROS_INFO("All waypoints reached. Preparing to land.");
-                land();
-                break;
-            }
-        }
-        
-        ros::spinOnce();
-        rate.sleep();
+    std::vector<gnc_api_waypoint> waypointList;
+    for (size_t i = 0; i < targetPoints.size(); ++i) {
+        auto& target = targetPoints[i];
+        double x, y;
+        latLonToMeters(std::get<0>(target), std::get<1>(target), x, y);
+        gnc_api_waypoint nextWayPoint;
+        nextWayPoint.x = x;
+        nextWayPoint.y = y;
+        nextWayPoint.z = std::get<2>(target); // 使用目标点的高度
+        nextWayPoint.psi = 0; // 根据需要设置psi值，这里暂时设为0
+        waypointList.push_back(nextWayPoint);
     }
 
+    ros::Rate rate(2.0);
+    int counter = 0;
+    while (ros::ok()) {
+        ros::spinOnce();
+        rate.sleep();
+        if (check_waypoint_reached(.3) == 1) {
+            if (counter < waypointList.size()) {
+                set_destination(waypointList[counter].x, waypointList[counter].y, waypointList[counter].z, waypointList[counter].psi);
+                counter++;  
+            } else {
+                land();
+                break;
+            }   
+        }   
+    }
     return 0;
 }
