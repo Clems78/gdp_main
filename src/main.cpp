@@ -90,41 +90,6 @@ float calculateDistance(float trackedCoordLat, float trackedCoordLong, float dro
 	return sqrt(pow(droneLat - trackedCoordLat, 2) + pow(droneLong - trackedCoordLong, 2));
 }
 
-void already_tracked_cb(const gdp_main::CoordinateList::ConstPtr& already_tracked_msg)
-{
-	ROS_INFO("already tracked loop entered");
-	ROS_INFO("Detection flag %ld", detection_flag);
-	if (detection_flag == 1) // If target detect box detected 
-	{
-		//get current position in global coordinate
-		float drone_lat = position_msg.x; 
-		float drone_long = position_msg.y;
-
-		//Boolean condition
-		bool allDistanceAboveThreshold = true;
-
-		for (int i=0; i<already_tracked_msg->points.size(); i++)
-		{
-			float already_tracked_x = already_tracked_msg->points[i].x;
-			float already_tracked_y = already_tracked_msg->points[i].y;
-
-			float distanceToCoord = calculateDistance(already_tracked_x, already_tracked_y, drone_lat, drone_long);
-
-			if (distanceToCoord < tracking_coord_threshold)
-			{
-				allDistanceAboveThreshold = false;
-				ROS_INFO("Target already tracked !");
-			}
-		}
-
-		if (allDistanceAboveThreshold = true)
-		{
-			mode = 1; //Set to tracking 
-			ROS_INFO("New target, commencing tracking !");
-		}
-	}
-}
-
 //Get global coordinates of the drone
 void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
 {
@@ -154,7 +119,7 @@ void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) //
 		if (boxe_name == "person") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
 		{
 				ROS_INFO("%s detected", darknet_msg->bounding_boxes[i].Class.c_str());
-				int detection_flag = 1;
+				detection_flag = 1;
 				//mode = 1;
 				target_lost_counter = 0; // put back target lost counter to 0
 
@@ -208,6 +173,41 @@ void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) //
 				mode = 0;
 			}	
 		}	
+	}
+}
+
+void already_tracked_cb(const gdp_main::CoordinateList::ConstPtr& already_tracked_msg)
+{
+	ROS_INFO("already tracked loop entered");
+	ROS_INFO("Detection flag %ld", detection_flag);
+	if (detection_flag == 1) // If target detect box detected 
+	{
+		//get current position in global coordinate
+		float drone_lat = position_msg.x; 
+		float drone_long = position_msg.y;
+
+		//Boolean condition
+		bool allDistanceAboveThreshold = true;
+
+		for (int i=0; i<already_tracked_msg->points.size(); i++)
+		{
+			float already_tracked_x = already_tracked_msg->points[i].x;
+			float already_tracked_y = already_tracked_msg->points[i].y;
+
+			float distanceToCoord = calculateDistance(already_tracked_x, already_tracked_y, drone_lat, drone_long);
+
+			if (distanceToCoord < tracking_coord_threshold)
+			{
+				allDistanceAboveThreshold = false;
+				ROS_INFO("Target already tracked !");
+			}
+		}
+
+		if (allDistanceAboveThreshold = true)
+		{
+			mode = 1; //Set to tracking 
+			ROS_INFO("New target, commencing tracking !");
+		}
 	}
 }
 
