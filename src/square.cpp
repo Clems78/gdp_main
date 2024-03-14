@@ -40,7 +40,11 @@ int main(int argc, char** argv)
 	nextWayPoint.z = 1.2;
 	nextWayPoint.psi = 0;
 	waypointList.push_back(nextWayPoint);
-
+	nextWayPoint.x = 0;
+	nextWayPoint.y = 2;
+	nextWayPoint.z = 1.2;
+	nextWayPoint.psi = 0;
+	waypointList.push_back(nextWayPoint);
 
 
 	//specify control loop rate. We recommend a low frequency to not over load the FCU with messages. Too many messages will cause the drone to be sluggish
@@ -48,10 +52,10 @@ int main(int argc, char** argv)
 	int counter = 0;
 	while(ros::ok())
 	{
-		ROS_INFO("outer loop");
+		// ROS_INFO("outer loop");
 		ros::spinOnce();
 		rate.sleep();
-		if(check_waypoint_reached(.3) == 1)
+		if(check_waypoint_reached(.3, 10) == 1)
 		{
 			ROS_INFO("Checkpoint fucking reached");
 			if (counter < waypointList.size())
@@ -63,6 +67,7 @@ int main(int argc, char** argv)
 				//land after all waypoints are reached
 				ROS_INFO("LANDING");
 				land();
+				break;
 			}	
 		}	
 		

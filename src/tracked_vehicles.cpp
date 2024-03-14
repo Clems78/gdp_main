@@ -10,8 +10,12 @@ using namespace std;
 //Subscribed to n number of topics where each main nodes publish the coordinate of the tracked vehicles 
 //Each main node is also subscribed to this node so that if they don't track a vehicle that has already been tracked
 
+/////////////////////////////////////////////// PARAMETERS ///////////////////////////////////////////////
+
 // Set the threshold distance for taking into account a new tracked vehicle coordinate
 float distance_threshold = 0.000000000000000001; 
+
+/////////////////////////////////////////////// PARAMETERS ///////////////////////////////////////////////
 
 struct Coordinate 
 {
@@ -20,13 +24,14 @@ struct Coordinate
 	//float altitude;
 };
 
+// Create object of class Coordinate
 Coordinate tracked_vehicle_coordinate;
 
+// Create the list of coordinates
 vector<Coordinate> tracked_vehicle_coords_list;
 
 //Initilise publisher 
 ros::Publisher already_tracked_vehicle_pub;
-
 
 
 // Function to calculate the distance between two coordinates
@@ -50,6 +55,9 @@ bool isWithinThreshold(const Coordinate& new_coord, float distance_threshold)
     return false; // Coordinate is not within threshold distance of any coordinate in the list
 }
 
+
+//Callback function that subscribes to the coordinate of all vehicle being published and add them into a list
+//This list is then published 
 void tracked_vehicle_cb(const geometry_msgs::Point::ConstPtr& tracked_vehicle_msg) // callback function
 {
 	float latitude = tracked_vehicle_msg->x;
@@ -69,14 +77,7 @@ void tracked_vehicle_cb(const geometry_msgs::Point::ConstPtr& tracked_vehicle_ms
         // Add the new coordinate to the list if it's not within the threshold distance of any existing coordinate
         tracked_vehicle_coords_list.push_back(tracked_vehicle_coordinate);
         ROS_INFO("######Coordinates added to the tracked vehicle list !#######");
-
     }
-
-	//Detail message content
-	//already_tracked_vehicle_msg.x = latitude;
-    //already_tracked_vehicle_msg.y = longitude;
-    //already_tracked_vehicle_msg.z = 0;
-    //already_tracked_vehicle_pub.publish(already_tracked_vehicle_msg);
 }
 
 
@@ -104,18 +105,19 @@ int main(int argc, char **argv) {
 	//Initialise tracked vehicle coordinate message
 	gdp_main::CoordinateList already_tracked_vehicle_msg;
 
+	//Initialise the publisher of the list
 	already_tracked_vehicle_pub = n.advertise<gdp_main::CoordinateList>("all_tracked_vehicle_coords", 1);
-
 
 	// Publish at 2Hz
 	ros::Rate rate(2);
 
-	 //makes the int main run infinitely
-
+	//Control loop
 	while(ros::ok())
 	{
+		//Clear the message
 		already_tracked_vehicle_msg.points.clear();
 
+		//Iterates over the list and push back into the message 
 	    for (vector<Coordinate>::iterator it = tracked_vehicle_coords_list.begin(); it != tracked_vehicle_coords_list.end(); ++it) 
 	    {
 	    	geometry_msgs::Point tracked_vehicle_coordinate;
@@ -127,14 +129,11 @@ int main(int argc, char **argv) {
 	        already_tracked_vehicle_msg.points.push_back(tracked_vehicle_coordinate);
 	    }
 
+	    //Publish 
 	    already_tracked_vehicle_pub.publish(already_tracked_vehicle_msg);
 	    
 	    ros::spinOnce();
 	    rate.sleep();
-
-
-
-
 	}
 
 
