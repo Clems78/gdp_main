@@ -254,3 +254,6 @@ target_link_libraries(search_detect_land_fl ${catkin_LIBRARIES})
 
 add_executable(global_waypoints_fl src/Flight_Arena_Test/global_waypoints_fl.cpp)
 target_link_libraries(global_waypoints_fl ${catkin_LIBRARIES})
+
+add_executable(tracking_test src/Flight_Arena_Test/tracking_test.cpp)
+target_link_libraries(tracking_test ${catkin_LIBRARIES})
