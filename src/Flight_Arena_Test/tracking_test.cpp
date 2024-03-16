@@ -81,12 +81,12 @@ Coordinate getTrackingWaypoint(float current_pos_x, float current_pos_y, float c
 
 	float beta = -atan2(distanceToCentre_y, distanceToCentre_x) * 180/M_PI; //target angle from x middle axis (camera frame) 
 	ROS_INFO("center of frame to target angle：%lf", beta);
-	float gamma = beta - abs(currentHeading) ;
+	float gamma = beta - abs(currentHeading);
 	ROS_INFO("gamma：%lf", gamma);
 	float dist2centre = sqrt(pow(distanceToCentre_x, 2) + pow(distanceToCentre_y, 2));
 	ROS_INFO("Distance to centre of the frame is %lf", dist2centre);
 
-	gamma = gamma *M_PI/18;
+	gamma = gamma * M_PI/180;
 
 	trackingWaypoint.x = current_pos_x + dist2centre*cos(gamma);
 	trackingWaypoint.y = current_pos_y + dist2centre*sin(gamma);
