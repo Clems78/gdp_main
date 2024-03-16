@@ -280,8 +280,12 @@ int main(int argc, char **argv) {
 	int counter = 0;
 	while(ros::ok()) // loop as long as the node is running
 	{	
+		ROS_INFO("");
 		if (mode == 0) //SEARCHING MODE
 		{	
+			geometry_msgs::Point current_pos_2;
+			current_pos_2 = get_current_location();
+			ROS_INFO("Current position", current_pos_2.x);
 			ros::spinOnce(); // Allows to continue processing main loop but still using callback information
 			ROS_INFO("#####SEARCHING#####SEARCHING#####SEARCHING#####");
 			tracking_counter = 0;

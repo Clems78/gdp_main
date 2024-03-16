@@ -34,7 +34,7 @@
 
     <!-- add new camera -->
     <link name='camera'>
-      <pose>0 -0.01 0.070 .8 0 1.57</pose>
+      <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.1</mass>
@@ -100,6 +100,24 @@
         </plugin>
       </sensor>
     </link>
+
+<!-- attach camera -->
+      <joint type="revolute" name="base_camera_joint">
+        <pose>0 0 0.0 0 0 0</pose>
+        <parent>iris::iris_demo::gimbal_small_2d::tilt_link</parent>
+        <child>camera</child>
+        <axis>
+          <limit>
+            <lower>0</lower>
+            <upper>0</upper>
+          </limit>
+          <xyz>0 0 1</xyz>
+          <use_parent_model_frame>true</use_parent_model_frame>
+        </axis>
+      </joint>
+
+
+
     </model>
 
   </world>
