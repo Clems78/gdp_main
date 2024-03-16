@@ -24,7 +24,7 @@ void set_global_position_target(double latitude, double longitude, double altitu
     target.coordinate_frame = mavros_msgs::GlobalPositionTarget::FRAME_GLOBAL_INT;
     target.latitude = latitude;
     target.longitude = longitude;
-    target.altitude = altitude;
+    target.altitude = (587);
 
     global_position_pub.publish(target);
 }
@@ -56,7 +56,7 @@ std::vector<TargetPoint> waypoints = {
     {-35.363249,  149.165257,  612.808726},
     {-35.363257,  149.16509,   612.808726},
     {-35.363266,  149.165091,  612.808726},
-    {-35.363257,  149.165258, 612.808726},
+    {-35.363257,  149.165258,  612.808726},
     {-35.363266,  149.165259,  612.808726},
     {-35.363274,  149.165093,  612.808726},
     {-35.363281,  149.165094,  612.808726},

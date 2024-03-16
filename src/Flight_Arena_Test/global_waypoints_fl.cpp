@@ -26,7 +26,7 @@ void set_global_position_target(double latitude, double longitude, double altitu
     target.latitude = latitude;
     target.longitude = longitude;
     target.altitude = 585.2;
-
+   target.yaw = 90;
     global_position_pub.publish(target);
 }
 
@@ -172,10 +172,8 @@ struct TargetPoint {
 };
 
 std::vector<TargetPoint> waypoints = {
-    {-35.363261, 149.16523, 603.7887287},  // 初始位置
-
-
-    {-35.36325199, 149.16523, 603.7887287},  //North 1
+    {-35.363261, 149.16523, 603.7887287},       // 初始位置
+    {-35.36325199, 149.16523, 603.7887287},     //North 1
     {-35.36325199, 149.16524100, 603.7887287},  // est 1
     {-35.36327001, 149.16524100, 603.7887287},  //south 2
     {-35.36327001, 149.16521899, 603.7887287},  // west 2
@@ -190,19 +188,19 @@ std::vector<TargetPoint> waypoints = {
     // {-35.36317510, 149.16522660, 603.7887287},  // 第七个目标点 
 
     // {-35.3631910, 149.16522660, 603.7887287},  // 第七下1
-   //  {-35.3631910, 149.16526520, 603.7887287},  // 第六下1
+    //  {-35.3631910, 149.16526520, 603.7887287},  // 第六下1
 
     // {-35.36321160, 149.16526730, 603.7887287},  // 第五个目标点
     // {-35.36321160, 149.16522660, 603.7887287},  // 第五左
 
-   //  {-35.36324310, 149.16522190, 603.7887287},  // 第八个目标点
-   //  {-35.36324310, 149.16525460, 603.7887287},  // 第八向右
-   //  {-35.36324400, 149.16508600, 603.7887287},  // 第九个
+    //  {-35.36324310, 149.16522190, 603.7887287},  // 第八个目标点
+    //  {-35.36324310, 149.16525460, 603.7887287},  // 第八向右
+    //  {-35.36324400, 149.16508600, 603.7887287},  // 第九个
    //  {-35.36326100, 149.16508600, 603.7887287},  // 第一个目标点
    //  {-35.36326100, 149.16525460, 603.7887287},  //第一右
 
- //  {-35.36327290, 149.16525380, 603.7887287},  // 第三个目标点
-  // {-35.36327800, 149.16508600, 603.7887287},  // 第二个目标点
+   //  {-35.36327290, 149.16525380, 603.7887287},  // 第三个目标点
+   // {-35.36327800, 149.16508600, 603.7887287},  // 第二个目标点
 
    // {-35.36326100, 149.16508600, 603.7887287},   第一个目标点
     //{-35.36327800, 149.16508600, 603.7887287},  第二个目标点
@@ -231,24 +229,25 @@ int main(int argc, char **argv) {
     wait4start();
 
    // takeoff(1.7);
-    // double latitude1 = -35.363261; // 示例纬度
-    // double longitude1 = 149.16523; // 示例经度
-    // double altitude1 = 585.2; // 起飞后的目标高度，单位为米
+   // double latitude1 = -35.363261; // 示例纬度
+   // double longitude1 = 149.16523; // 示例经度
+   // double altitude1 = 585.2; // 起飞后的目标高度，单位为米
 
     takeoff(1.2);
 
   // takeoff2(latitude1, longitude1,altitude1, nh);
- // set_global_takeoff_target1(latitude1,longitude1,altitude1,nh);
+  // set_global_takeoff_target1(latitude1,longitude1,altitude1,nh);
     ros::Rate rate(2.0); // 2 Hz
     size_t current_waypoint_index = 0; // 当前目标点索引
 
     while(ros::ok() && current_waypoint_index < waypoints.size()) {
         auto& target = waypoints[current_waypoint_index];
+        
         set_global_position_target(target.latitude, target.longitude, target.altitude, nh);
-
+        
         double current_distance = calculate_distance(current_position.latitude, current_position.longitude, target.latitude, target.longitude);
         ROS_INFO("Current distance to waypoint %lu: %f meters", current_waypoint_index, current_distance);
-
+       
         // 检查是否到达目标点（例如，距离小于10米）
         if (current_distance < 0.5) {
             ROS_INFO("Arrived at waypoint %lu.", current_waypoint_index);
