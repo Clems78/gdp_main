@@ -20,7 +20,7 @@ int img_center_x = width/2;
 int img_center_y = height/2;
 
 //Pixel to metres topic 
-float pix2metres = 0.00332812; // Subscribes to pixel to metres topic // Need another callback function
+float pix2metres = 0.00332812*2; // Subscribes to pixel to metres topic // Need another callback function
 
 // Time after which the drone goes back to searching if the target is lost during tracking 
 int lost_target_time = 5;
@@ -63,6 +63,8 @@ ros::Publisher tracked_vehicle_pos_pub;
 //Initialise tracked vehicle coordinate message
 geometry_msgs::Point position_msg;
 
+
+
 //subscriber
 // ros::Subscriber currentPos_test;
 // nav_msgs::Odometry current_pose_g_test;
@@ -75,26 +77,42 @@ struct Coordinate
 	float y;
 };
 
-Coordinate getTrackingWaypoint(float current_pos_x, float current_pos_y, float currentHeading, float distanceToCentre_x, float distanceToCentre_y)
-{
-	Coordinate trackingWaypoint;
+Coordinate trackingWaypoint;
 
-	float beta = -atan2(distanceToCentre_y, distanceToCentre_x) * 180/M_PI; //target angle from x middle axis (camera frame) 
-	ROS_INFO("center of frame to target angle：%lf", beta);
-	float gamma = beta - abs(currentHeading);
-	ROS_INFO("gamma：%lf", gamma);
-	float dist2centre = sqrt(pow(distanceToCentre_x, 2) + pow(distanceToCentre_y, 2));
-	ROS_INFO("Distance to centre of the frame is %lf", dist2centre);
+// Assuming the angle is provided in radians
+Coordinate localToGlobal(float drone_x, float drone_y, float drone_heading, float target_local_x, float target_local_y) {
+    // Rotation matrix for transforming local coordinates to global coordinates
+    float cos_heading = cos(drone_heading);
+    float sin_heading = sin(drone_heading);
 
-	gamma = gamma * M_PI/180;
+    float target_global_x = drone_x + cos_heading * target_local_x + sin_heading * target_local_y;
+    float target_global_y = drone_y + sin_heading * target_local_x - cos_heading * target_local_y;
 
-	trackingWaypoint.x = current_pos_x + dist2centre*cos(gamma);
-	trackingWaypoint.y = current_pos_y + dist2centre*sin(gamma);
-
-	ROS_INFO("Waypoint is x: %lf and y: %lf", trackingWaypoint.x, trackingWaypoint.y);
-
-	return trackingWaypoint;
+    Coordinate target_global = {target_global_x, target_global_y};
+    // ROS_INFO("Waypoint is x: %lf and y: %lf", target_global_x, target_global_y);
+    return target_global;
 }
+
+// Coordinate getTrackingWaypoint(float current_pos_x, float current_pos_y, float currentHeading, float distanceToCentre_x, float distanceToCentre_y)
+// {
+// 	Coordinate trackingWaypoint;
+
+// 	float beta = -atan2(distanceToCentre_y, distanceToCentre_x) * 180/M_PI; //target angle from x middle axis (camera frame) 
+// 	ROS_INFO("center of frame to target angle：%lf", beta);
+// 	float gamma = beta - abs(currentHeading);
+// 	ROS_INFO("gamma：%lf", gamma);
+// 	float dist2centre = sqrt(pow(distanceToCentre_x, 2) + pow(distanceToCentre_y, 2));
+// 	ROS_INFO("Distance to centre of the frame is %lf", dist2centre);
+
+// 	gamma = gamma * M_PI/180;
+
+// 	trackingWaypoint.x = current_pos_x + dist2centre*cos(gamma);
+// 	trackingWaypoint.y = current_pos_y + dist2centre*sin(gamma);
+
+// 	ROS_INFO("Waypoint is x: %lf and y: %lf", trackingWaypoint.x, trackingWaypoint.y);
+
+// 	return trackingWaypoint;
+// }
 
 //Get global coordinates of the drone
 void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
@@ -113,6 +131,7 @@ void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
 //const <msg package name>::<message>::ConstPtr& msg
 void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) // callback function
 {
+	ROS_INFO("darknet loop");
 	// ROS_INFO("mode :  %ld", mode);
 
 	for (int i=0; i<darknet_msg->bounding_boxes.size(); i++ ) // run on each bouding box that is in the message
@@ -156,7 +175,19 @@ void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) //
 				//Convert into meters			
 				dist2center_x = pix_dist2center_x * pix2metres; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 	
 				dist2center_y = pix_dist2center_y * pix2metres; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 
-				ROS_INFO("Distance in metres to move in x:%lf and y: %lf", dist2center_x, dist2center_y);
+				ROS_INFO("Distance to center in x:%lf and y: %lf", dist2center_x, dist2center_y);
+
+				geometry_msgs::Point current_pos;
+				// ROS_INFO("Current location x %lf y %lf", current_pos.x, current_pos.y);
+				current_pos = get_current_location(); //In regards to the "local frame" created at takeoff
+				ROS_INFO("current position x: %lf y:%lf",current_pos.x, current_pos.y);
+
+				float current_heading = get_current_heading();
+				ROS_INFO("Current heading: %lf", current_heading);
+
+
+				trackingWaypoint = localToGlobal(current_pos.x, current_pos.y, current_heading * M_PI/180, dist2center_x, dist2center_y);
+				ROS_INFO("Waypoint coordinate in x:%lf and y: %lf", trackingWaypoint.x, trackingWaypoint.y);
 		}
 
 		//Condition for going back to search mode after a certain amount of time if the target is lost ie box_name = empty
@@ -208,6 +239,7 @@ int main(int argc, char **argv) {
 
 	//	ros::Subscriber sub = <nodehandle>.subscribe("<topic>", <# of msg buffered>, <name of callback function>);
 	ros::Subscriber darknet_sub = n.subscribe("/darknet_ros/bounding_boxes", 1, darknet_cb); //1 = how many message buffered. default 1
+	// AS long as there is no new messages in this topic, the callback function is not entered
 
 	//Getting global coordinate
 	ros::Subscriber pos_sub = n.subscribe("/mavros/global_position/global", 1, pos_cb);
@@ -230,37 +262,39 @@ int main(int argc, char **argv) {
 	int counter = 0;
 	while(ros::ok()) // loop as long as the node is running
 	{	
-		float current_heading = get_current_heading();
-		ROS_INFO("Current headind %lf", current_heading_g);
+		// float current_heading = get_current_heading();
+		// // ROS_INFO("Current headind %lf", current_heading_g);
 
-		geometry_msgs::Point current_location; 
-		current_location = get_current_location();
-		ROS_INFO("Current location %lf", current_location.x);
-
-
+		// geometry_msgs::Point current_location; 
+		// current_location = get_current_location();
+		// // ROS_INFO("Current location %lf", current_location.x);
 
 		if (mode == 0) //SEARCHING MODE
 		{	
 			// ROS_INFO("Searching");
-			ros::spinOnce();
+			// ros::spinOnce();
 		}
 
 		else if (mode == 1) //TRACKING MODE
 		{
-			ros::spinOnce();
+			// ros::spinOnce();
 			ROS_INFO("Tracking"); 
+			
 
-			geometry_msgs::Point current_pos;
-			// ROS_INFO("Current location x %lf y %lf", current_pos.x, current_pos.y);
-
-			current_pos = get_current_location(); //In regards to the "local frame" created at takeoff
-
-			float current_heading = get_current_heading();
 			// ROS_INFO("Current headind %lf", current_heading_g);
 
-			Coordinate trackingWaypoint;
-			trackingWaypoint= getTrackingWaypoint(current_pos.x, current_pos.y, current_heading, dist2center_x, dist2center_y);
-			// ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
+			//Should only be trigered if the bounding boxe is detected
+			// Otherwise the waypoints keep being updated with the last position of the drone and bounding boxe
+			// Can be put inside the callback function maybe ? 
+			// The update rate of the darknet ros is very slow that's a reason for this issue. 
+			// But it shows that if the bounding box is lost, the drones flies away. It should stop after reaching the next waypoint
+			
+			// if(check_waypoint_reached(pose_tolerance, heading_tolerance) == 1)
+			// {
+			// 	// set_destination(trackingWaypoint.x, trackingWaypoint.y, target_alt, 0);
+			// 	ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
+			// }
+			
 		}	
 		rate.sleep();
 		ros::spinOnce();

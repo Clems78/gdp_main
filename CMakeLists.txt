@@ -257,3 +257,6 @@ target_link_libraries(global_waypoints_fl ${catkin_LIBRARIES})
 
 add_executable(tracking_test src/Flight_Arena_Test/tracking_test.cpp)
 target_link_libraries(tracking_test ${catkin_LIBRARIES})
+
+add_executable(tracking_gpt src/Flight_Arena_Test/tracking_gpt.cpp)
+target_link_libraries(tracking_gpt ${catkin_LIBRARIES})
