@@ -270,4 +270,7 @@ target_link_libraries(tracking_gpt ${catkin_LIBRARIES})
 add_executable(tracking src/Flight_Arena_Test/tracking.cpp)
 target_link_libraries(tracking ${catkin_LIBRARIES})
 
+add_executable(tracking_yolov5 src/Flight_Arena_Test/tracking_yolov5.cpp)
+target_link_libraries(tracking_yolov5 ${catkin_LIBRARIES})
+
 
