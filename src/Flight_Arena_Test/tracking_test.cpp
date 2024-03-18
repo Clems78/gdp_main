@@ -20,6 +20,7 @@ int img_center_x = width/2;
 int img_center_y = height/2;
 
 //Pixel to metres topic 
+
 float pix2metres = 0.00332812; // Subscribes to pixel to metres topic // Need another callback function
 
 // Time after which the drone goes back to searching if the target is lost during tracking 
@@ -29,10 +30,10 @@ int lost_target_time = 5;
 int tracking_time = 10;
 
 //Flying altitude
-float target_alt = 3;
+float target_alt = 1.2;
 
 //Check waypoints reached tolerance
-float pose_tolerance = 0.3; //metres
+float pose_tolerance = 0.2; //metres
 float heading_tolerance = 2; //degrees
 
 /////////////////////////////////////////////// PARAMETERS ///////////////////////////////////////////////
@@ -69,6 +70,8 @@ geometry_msgs::Point position_msg;
 // ros::Subscriber currentPos_test;
 // nav_msgs::Odometry current_pose_g_test;
 
+//Altitude local frame
+float alt_local;
 
 //Coordinate structure
 struct Coordinate 
@@ -77,10 +80,18 @@ struct Coordinate
 	float y;
 };
 
+//Coordinate tracking waypoint
 Coordinate trackingWaypoint;
 
+struct P2M
+{
+	double x; 
+	double y;
+};
+
+
 // Assuming the angle is provided in radians
-Coordinate localToGlobal(float drone_x, float drone_y, float drone_heading, float target_local_x, float target_local_y) {
+Coordinate localToGlobal(float drone_x, float drone_y, float drone_heading, double target_local_x, double target_local_y) {
     // Rotation matrix for transforming local coordinates to global coordinates
     float cos_heading = cos(drone_heading);
     float sin_heading = sin(drone_heading);
@@ -93,26 +104,15 @@ Coordinate localToGlobal(float drone_x, float drone_y, float drone_heading, floa
     return target_global;
 }
 
-// Coordinate getTrackingWaypoint(float current_pos_x, float current_pos_y, float currentHeading, float distanceToCentre_x, float distanceToCentre_y)
-// {
-// 	Coordinate trackingWaypoint;
+P2M getPix2Metres(float altitude) //altitude in metres
+{
+	double pix2metres_x = 0.00045312 * altitude + 0.00277604;	
+	double pix2metres_y = 0.00068750 * altitude + 0.00238889;
 
-// 	float beta = -atan2(distanceToCentre_y, distanceToCentre_x) * 180/M_PI; //target angle from x middle axis (camera frame) 
-// 	ROS_INFO("center of frame to target angle：%lf", beta);
-// 	float gamma = beta - abs(currentHeading);
-// 	ROS_INFO("gamma：%lf", gamma);
-// 	float dist2centre = sqrt(pow(distanceToCentre_x, 2) + pow(distanceToCentre_y, 2));
-// 	ROS_INFO("Distance to centre of the frame is %lf", dist2centre);
-
-// 	gamma = gamma * M_PI/180;
-
-// 	trackingWaypoint.x = current_pos_x + dist2centre*cos(gamma);
-// 	trackingWaypoint.y = current_pos_y + dist2centre*sin(gamma);
-
-// 	ROS_INFO("Waypoint is x: %lf and y: %lf", trackingWaypoint.x, trackingWaypoint.y);
-
-// 	return trackingWaypoint;
-// }
+	P2M pix2metres = {pix2metres_x, pix2metres_y};
+	
+	return pix2metres;
+}
 
 //Get global coordinates of the drone
 void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
@@ -127,6 +127,14 @@ void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
     position_msg.y = longitude;
     position_msg.z = altitude;
 }
+
+// //Get local coordinates of the drone
+// void loc_pos_cb(const nav_msgs::Odometry::ConstPtr& loc_pos_msg)
+// {
+// 	//Extract data
+// 	alt_local = loc_pos_msg->pose.pose.position.z;
+
+// }
 
 //const <msg package name>::<message>::ConstPtr& msg
 void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) // callback function
@@ -172,18 +180,31 @@ void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) //
 				float pix_dist2center_y = bb_center_y - img_center_y;
 				//ROS_INFO("Center is %lf pixels away in x and %lf pixels away in y", pix_dist2center_x, pix_dist2center_y);
 
-				//Convert into meters			
-				dist2center_x = pix_dist2center_x * pix2metres; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 	
-				dist2center_y = pix_dist2center_y * pix2metres; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 
-				ROS_INFO("Distance to center in x:%lf and y: %lf", dist2center_x, dist2center_y);
+				ros::Time timestamp = darknet_msg->header.stamp;
 
+			    // Print the timestamp
+			    ROS_INFO("Timestamp of bounding box message: %f", timestamp.toSec());
+
+
+				// Get current location
 				geometry_msgs::Point current_pos;
-				// ROS_INFO("Current location x %lf y %lf", current_pos.x, current_pos.y);
-				current_pos = get_current_location(); //In regards to the "local frame" created at takeoff
-				ROS_INFO("current position x: %lf y:%lf",current_pos.x, current_pos.y);
+				current_pos = get_current_location(); //In regards to the "local frame" created at takeoff	
+				ROS_INFO("current position x: %lf y:%lf z:%lf",current_pos.x, current_pos.y, current_pos.z);
 
+				//Get current heading 
 				float current_heading = get_current_heading();
-				ROS_INFO("Current heading: %lf", current_heading);
+				ROS_INFO("Current heading: %lf", current_heading);			
+
+				// //Convert into meters			
+				// dist2center_x_old = pix_dist2center_x * pix2metres; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 	
+				// dist2center_y_old = pix_dist2center_y * pix2metres; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 
+				// ROS_INFO("Distance to center in x:%lf and y: %lf", dist2center_x, dist2center_y);
+
+				//Convert into metres
+				P2M p2m = getPix2Metres(current_pos.z);
+				double dist2center_x = pix_dist2center_x * p2m.x ; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 	
+				double dist2center_y = pix_dist2center_y * p2m.y; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 
+				ROS_INFO("Distance to center in x :%lf and y: %lf", dist2center_x, dist2center_y);			
 
 
 				trackingWaypoint = localToGlobal(current_pos.x, current_pos.y, current_heading * M_PI/180, dist2center_x, dist2center_y);
@@ -244,6 +265,9 @@ int main(int argc, char **argv) {
 	//Getting global coordinate
 	ros::Subscriber pos_sub = n.subscribe("/mavros/global_position/global", 1, pos_cb);
 
+	//Getting local coordinate
+	// ros::Subscriber loc_pos_sub = n.subscribe("/mavros/global_position/local", 1, loc_pos_cb);
+
 	// currentPos_test = controlnode.subscribe<nav_msgs::Odometry>((ros_namespace + "/mavros/global_position/local").c_str(), 10, pose_cb_test);
 
 
@@ -255,6 +279,9 @@ int main(int argc, char **argv) {
 
 	//create local reference frame 
 	initialize_local_frame();
+
+	//Set speed
+	set_speed(5);
 
 
 	//specify control loop rate. We recommend a low frequency to not over load the FCU with messages. Too many messages will cause the drone to be sluggish
@@ -271,7 +298,7 @@ int main(int argc, char **argv) {
 
 		if (mode == 0) //SEARCHING MODE
 		{	
-			// ROS_INFO("Searching");
+			ROS_INFO("Searching");
 			// ros::spinOnce();
 		}
 
@@ -289,11 +316,14 @@ int main(int argc, char **argv) {
 			// The update rate of the darknet ros is very slow that's a reason for this issue. 
 			// But it shows that if the bounding box is lost, the drones flies away. It should stop after reaching the next waypoint
 			
-			// if(check_waypoint_reached(pose_tolerance, heading_tolerance) == 1)
-			// {
-			// 	// set_destination(trackingWaypoint.x, trackingWaypoint.y, target_alt, 0);
-			// 	ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
-			// }
+			if(check_waypoint_reached(pose_tolerance, heading_tolerance) == 1)
+			{	
+				ros::Duration delay(5.0);
+			    // Sleep for the specified duration
+			    delay.sleep();
+				set_destination(trackingWaypoint.x, trackingWaypoint.y, target_alt, 0);
+				ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
+			}
 			
 		}	
 		rate.sleep();
