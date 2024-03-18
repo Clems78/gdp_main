@@ -29,7 +29,7 @@ int lost_target_time = 5;
 int tracking_time = 10;
 
 //Flying altitude
-float target_alt = 3;
+float target_alt = 1.2;
 
 //Check waypoints reached tolerance
 float pose_tolerance = 0.3; //metres
@@ -253,8 +253,14 @@ int main(int argc, char **argv) {
   	// wait for FCU connection
 	wait4connect();
 
+	//Wait for user to set mode to guided
+	// wait4start();
+
 	//create local reference frame 
 	initialize_local_frame();
+
+	//request takeoff
+	// takeoff(target_alt);
 
 
 	//specify control loop rate. We recommend a low frequency to not over load the FCU with messages. Too many messages will cause the drone to be sluggish
@@ -289,11 +295,11 @@ int main(int argc, char **argv) {
 			// The update rate of the darknet ros is very slow that's a reason for this issue. 
 			// But it shows that if the bounding box is lost, the drones flies away. It should stop after reaching the next waypoint
 			
-			// if(check_waypoint_reached(pose_tolerance, heading_tolerance) == 1)
-			// {
-			// 	// set_destination(trackingWaypoint.x, trackingWaypoint.y, target_alt, 0);
-			// 	ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
-			// }
+			if(check_waypoint_reached(pose_tolerance, heading_tolerance) == 1)
+			{
+				set_destination(trackingWaypoint.x, trackingWaypoint.y, target_alt, 0);
+				ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
+			}
 			
 		}	
 		rate.sleep();
