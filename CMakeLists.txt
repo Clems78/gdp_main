@@ -260,3 +260,9 @@ target_link_libraries(tracking_test ${catkin_LIBRARIES})
 
 add_executable(tracking_gpt src/Flight_Arena_Test/tracking_gpt.cpp)
 target_link_libraries(tracking_gpt ${catkin_LIBRARIES})
+
+add_executable(search_global src/search_global.cpp)
+target_link_libraries(search_global ${catkin_LIBRARIES})
+
+add_executable(search_global2 src/search_global2.cpp)
+target_link_libraries(search_global2 ${catkin_LIBRARIES})
