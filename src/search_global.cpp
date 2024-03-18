@@ -304,7 +304,7 @@ std::vector<TargetPoint> waypoints = {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "gnc_node");
     ros::NodeHandle nh;
-  //  initialize_local_frame();
+    initialize_local_frame();
 
     init_publisher_subscriber(nh);
     
