@@ -56,6 +56,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
  FILES
  CoordinateList.msg
+ DronePositionList.msg
 #   Message1.msg
 #   Message2.msg
 )
@@ -247,6 +248,9 @@ target_link_libraries(search_global ${catkin_LIBRARIES})
 
 add_executable(search_global2 src/search_global2.cpp)
 target_link_libraries(search_global2 ${catkin_LIBRARIES})
+
+add_executable(swarm_position src/swarm_position.cpp)
+target_link_libraries(swarm_position ${catkin_LIBRARIES})
 
 ################
 ## REAL FLIGHT##
