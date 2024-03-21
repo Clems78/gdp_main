@@ -252,6 +252,21 @@ target_link_libraries(search_global2 ${catkin_LIBRARIES})
 add_executable(swarm_position src/swarm_position.cpp)
 target_link_libraries(swarm_position ${catkin_LIBRARIES})
 
+add_executable(apf_test_drone_1 src/apf_test_drone_1.cpp)
+target_link_libraries(apf_test_drone_1 ${catkin_LIBRARIES})
+
+add_executable(apf_global_drone_1 src/apf_global_drone_1.cpp)
+target_link_libraries(apf_global_drone_1 ${catkin_LIBRARIES})
+
+add_executable(apf_global_drone_2 src/apf_global_drone_2.cpp)
+target_link_libraries(apf_global_drone_2 ${catkin_LIBRARIES})
+
+add_executable(apf1 src/apf1.cpp)
+target_link_libraries(apf1 ${catkin_LIBRARIES})
+
+add_executable(apf2 src/apf2.cpp)
+target_link_libraries(apf2 ${catkin_LIBRARIES})
+
 ################
 ## REAL FLIGHT##
 ################
@@ -276,5 +291,7 @@ target_link_libraries(tracking ${catkin_LIBRARIES})
 
 add_executable(tracking_yolov5 src/Flight_Arena_Test/tracking_yolov5.cpp)
 target_link_libraries(tracking_yolov5 ${catkin_LIBRARIES})
+
+
 
 
