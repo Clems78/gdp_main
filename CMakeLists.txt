@@ -267,6 +267,12 @@ target_link_libraries(apf1 ${catkin_LIBRARIES})
 add_executable(apf2 src/apf2.cpp)
 target_link_libraries(apf2 ${catkin_LIBRARIES})
 
+add_executable(uselocation1 src/uselocation1.cpp)
+target_link_libraries(uselocation1 ${catkin_LIBRARIES})
+
+add_executable(uselocation2 src/uselocation2.cpp)
+target_link_libraries(uselocation2 ${catkin_LIBRARIES})
+
 ################
 ## REAL FLIGHT##
 ################
