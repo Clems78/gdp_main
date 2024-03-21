@@ -241,13 +241,21 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
         rate.sleep();
     }
 
-    // 在完成所有（包括追加的）航点后执行降落
+    // 在完成所有航点后，切换到LOITER模式以悬停
     if (current_waypoint_index >= waypoints.size()) {
-        ROS_INFO("[%s] All waypoints reached. Preparing to land.", drone_ns.c_str());
-        land();
+        ROS_INFO("[%s] All waypoints reached. Switching to LOITER mode for hovering.", drone_ns.c_str());
+        
+        ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
+        mavros_msgs::SetMode set_mode_srv;
+        set_mode_srv.request.custom_mode = "LOITER";  // 设置为LOITER模式
+        
+        if (set_mode_client.call(set_mode_srv) && set_mode_srv.response.mode_sent) {
+            ROS_INFO("LOITER mode set successfully.");
+        } else {
+            ROS_ERROR("Failed to set LOITER mode.");
+        }
     }
 }
-
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "gnc_node_drone1");
