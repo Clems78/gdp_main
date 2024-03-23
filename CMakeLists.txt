@@ -273,6 +273,8 @@ target_link_libraries(uselocation1 ${catkin_LIBRARIES})
 add_executable(uselocation2 src/uselocation2.cpp)
 target_link_libraries(uselocation2 ${catkin_LIBRARIES})
 
+
+
 ################
 ## REAL FLIGHT##
 ################
@@ -299,5 +301,7 @@ add_executable(tracking_yolov5 src/Flight_Arena_Test/tracking_yolov5.cpp)
 target_link_libraries(tracking_yolov5 ${catkin_LIBRARIES})
 
 
-
-
+add_executable(tk2 src/Flight_Arena_Test/tk2.cpp)
+target_link_libraries(tk2 ${catkin_LIBRARIES})
+add_executable(tk3 src/Flight_Arena_Test/tk3.cpp)
+target_link_libraries(tk3 ${catkin_LIBRARIES})
