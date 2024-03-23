@@ -13,6 +13,10 @@
 
 sensor_msgs::NavSatFix current_position;
 
+///////////////PARAMETERS///////////////
+float pose_tolerance = 0.2;
+///////////////PARAMETERS///////////////
+
 void globalPositionCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
     current_position = *msg;
     ROS_INFO("Current GPS: [%f, %f, %f]", msg->latitude, msg->longitude, msg->altitude);
@@ -104,7 +108,7 @@ int main(int argc, char **argv) {
         ROS_INFO("Current distance to waypoint %lu: %f meters", current_waypoint_index, current_distance);
 
         // 检查是否到达目标点（例如，距离小于10米）
-        if (current_distance < 0.2) {
+        if (current_distance < pose_tolerance) {
             ROS_INFO("Arrived at waypoint %lu.", current_waypoint_index);
             current_waypoint_index++; // 移动到下一个目标点
 
