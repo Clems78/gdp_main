@@ -300,8 +300,16 @@ target_link_libraries(tracking ${catkin_LIBRARIES})
 add_executable(tracking_yolov5 src/Flight_Arena_Test/tracking_yolov5.cpp)
 target_link_libraries(tracking_yolov5 ${catkin_LIBRARIES})
 
+add_executable(tarkyollo src/Flight_Arena_Test/tarkyollo.cpp)
+target_link_libraries(tarkyollo ${catkin_LIBRARIES})
+
+
 
 add_executable(tk2 src/Flight_Arena_Test/tk2.cpp)
 target_link_libraries(tk2 ${catkin_LIBRARIES})
+
 add_executable(tk3 src/Flight_Arena_Test/tk3.cpp)
 target_link_libraries(tk3 ${catkin_LIBRARIES})
+
+add_executable(search_detect_drone2 src/Flight_Arena_Test/search_detect_drone2.cpp)
+target_link_libraries(search_detect_drone2 ${catkin_LIBRARIES})
