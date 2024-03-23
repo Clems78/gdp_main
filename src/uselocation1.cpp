@@ -27,7 +27,7 @@ void globalPositionCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
 
 
 void set_global_position_and_yaw(double latitude, double longitude, double altitude, ros::NodeHandle& nh) {
-    ros::Publisher position_target_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("mavros/setpoint_raw/global", 10);
+    ros::Publisher position_target_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("/mavros/setpoint_raw/global", 10);
 
     // 确保发布者有时间来连接到ROS主题
     ros::Rate rate(20);
@@ -81,10 +81,6 @@ struct TargetPoint {
 
 
 std::vector<TargetPoint> waypoints = {
-
-
-
-
      //searching are 1 waypoints
   
 //{-35.3632670, 149.1650882, 603.7887287},
@@ -103,9 +99,6 @@ std::vector<TargetPoint> waypoints = {
 
 //{-35.36325650, 149.16510530, 603.7887287},
 //{-35.36325890, 149.16510530, 603.7887287},
-
-
-
 };
 
 
@@ -170,6 +163,7 @@ std::vector<TargetPoint> waypoints23 = {
   
 //{-35.3632670, 149.1650882, 603.7887287},
 //{-35.36325830, 149.16515750, 603.7887287},
+
 {-35.36327360, 149.16521110, 603.7887287},
 {-35.36324170, 149.16507850, 603.7887287},
 {-35.36324360, 149.16519760, 603.7887287},
@@ -204,8 +198,8 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
     ros::NodeHandle nn("/drone2");
     init_publisher_subscriber(nh);
 
-    ros::Subscriber position_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 10, globalPositionCallback);
-    ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("mavros/state", 10, drone2StateCallback); // 订阅无人机2的状态
+    ros::Subscriber position_sub = nh.subscribe<sensor_msgs::NavSatFix>("/mavros/global_position/global", 10, globalPositionCallback);
+    ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("/mavros/state", 10, drone2StateCallback); // 订阅无人机2的状态
     wait4connect();
 
     set_mode("GUIDED");
@@ -231,7 +225,9 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
             if (current_waypoint_index > 3 && !waypoints2_added) {
                 if (drone2_landed.load()) {
                     ROS_INFO("[%s] Drone 2 has landed. Appending additional waypoints.", drone_ns.c_str());
+
                     waypoints.insert(waypoints.end(), waypoints2.begin(), waypoints2.end());
+
                     waypoints2_added = true; // 标记waypoints2已被追加
                 }
             }
@@ -260,8 +256,8 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
 int main(int argc, char **argv) {
     ros::init(argc, argv, "gnc_node_drone1");
 
-    droneMission("/drone1", waypoints,waypoints13);
 
+    droneMission("~", waypoints,waypoints13);
     return 0;
 }
 
