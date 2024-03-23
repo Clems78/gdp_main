@@ -18,7 +18,11 @@ int width = 640;
 int height = 480;
 int img_center_x = width/2;
 int img_center_y = height/2;
-
+struct tg2 {
+    double latitude;
+    double longitude;
+    double altitude;
+};
 //Pixel to metres topic 
 
 float pix2metres = 0.00332812; // Subscribes to pixel to metres topic // Need another callback function
@@ -136,51 +140,34 @@ void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
 
 // }
 
+
 //const <msg package name>::<message>::ConstPtr& msg
-void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) // callback function
+void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg)
 {
-	ROS_INFO("darknet loop");
-	// ROS_INFO("mode :  %ld", mode);
+    ROS_INFO("Processing darknet bounding boxes...");
 
-	for (int i=0; i<darknet_msg->bounding_boxes.size(); i++ ) // run on each bouding box that is in the message
-	{
-		// ROS_INFO("%s detected", darknet_msg->bounding_boxes[i].Class.c_str()); //convert into a char array that can be used by ros; print detected object
+    bool person_detected = false;
 
-		string boxe_name = darknet_msg->bounding_boxes[i].Class.c_str();
-		// int detection_flag = 0;
+    for (const auto& box : darknet_msg->bounding_boxes) {
+        if (box.Class == "person") {
+            ROS_INFO("%s detected", box.Class.c_str());
+            person_detected = true;
+            target_lost_counter = 0; // Reset the counter since we've found our target
+            break; // Exit the loop early since we've found what we're looking for
+        }
+    }
 
-		if (boxe_name == "person") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
-		{
-				ROS_INFO("%s detected", darknet_msg->bounding_boxes[i].Class.c_str());
-				ROS_INFO("detection flag in darknet_ros: %ld", detection_flag);
-				mode = 1;
-				target_lost_counter = 0; // put back target lost counter to 0		    
-				
-		}
+    if (person_detected) {
+        mode = 1; // Switch to tracking mode
+    } else {
+        ROS_INFO("No person detected, switching to search mode.");
+        mode = 0; // Switch back to search mode
+    }
 
-		//Condition for going back to search mode after a certain amount of time if the target is lost ie box_name = empty
-		if (mode == 1 && boxe_name == "")
-		{
-			if (target_lost_counter < lost_target_time)
-			{
-				//Rate for target lost
-				ros::Rate target_lost_rate(1);
-				while (ros::ok())
-				{
-					ROS_INFO("Target lost ! Back to searching in %ld seconds", lost_target_time - target_lost_counter);
-					target_lost_counter++;
-					target_lost_rate.sleep(); //Ensure that the loop runs once per second
-					break;
-				}
-			}
-			else
-			{
-				ROS_INFO("Target lost ! Back to searching !");
-				mode = 0;
-			}	
-		}	
-	}
+    // You might want to handle the target_lost_counter logic outside of this callback
+    // For example, you could use a separate timer to increment the counter and check the mode
 }
+
 
 // void pose_cb_test(const nav_msgs::Odometry::ConstPtr& msg)
 // {
@@ -236,6 +223,7 @@ void set_global_position_and_yaw(double latitude, double longitude, double altit
 }
 
 
+
 double calculate_distance(double lat1, double lon1, double lat2, double lon2) {
     const double R = 6371000; // 地球半径，单位为米
     double latRad1 = lat1 * M_PI / 180;
@@ -278,117 +266,102 @@ std::vector<TargetPoint> waypoints = {
 
 
 };
+  
+int current_waypoint_index = 0;
+
+
+
+tg2 target2;
+
+
+
+tg2 last_target = {0, 0, 0}; // 上一个目标位置
+bool update_target2 = true; // 是否更新目标点的标志
+bool t222 = true; // 额外的逻辑控制变量，根据你的需求进行调整
 
 int main(int argc, char **argv) {
-
+    
 	ros::init(argc, argv, "main"); //name of the node
 	ros::NodeHandle n; //enable connection to the ros network
-    ros::NodeHandle nh;
-
-    init_publisher_subscriber(nh);
-    
-    ros::Subscriber position_sub = nh.subscribe("/mavros/global_position/global", 10, globalPositionCallback);
-    
-	//	ros::Subscriber sub = <nodehandle>.subscribe("<topic>", <# of msg buffered>, <name of callback function>);
+   // ros::NodeHandle nh;
+    //init_publisher_subscriber(nh);
+    ros::Subscriber position_sub = n.subscribe("/mavros/global_position/global", 10, globalPositionCallback);
 	ros::Subscriber darknet_sub = n.subscribe("/darknet_ros/bounding_boxes", 1, darknet_cb); //1 = how many message buffered. default 1
-	// AS long as there is no new messages in this topic, the callback function is not entered
-
-	//Getting global coordinate
-	ros::Subscriber pos_sub = n.subscribe("/mavros/global_position/global", 1, pos_cb);
-
-	//Getting local coordinate
-	// ros::Subscriber loc_pos_sub = n.subscribe("/mavros/global_position/local", 1, loc_pos_cb);
-
-	// currentPos_test = controlnode.subscribe<nav_msgs::Odometry>((ros_namespace + "/mavros/global_position/local").c_str(), 10, pose_cb_test);
-
-
-	//initialize control publisher/subscribers
+	//ros::Subscriber pos_sub = n.subscribe("/mavros/global_position/global", 1, pos_cb);
 	init_publisher_subscriber(n);
 
-  	// wait for FCU connection
 	wait4connect();
     set_mode("GUIDED");
 	//create local reference frame 
 	initialize_local_frame();
-
-	//wait4start();
     takeoff(1.2);
-	//Set speed
 	set_speed(1);
 
 
 	//specify control loop rate. We recommend a low frequency to not over load the FCU with messages. Too many messages will cause the drone to be sluggish
 	ros::Rate rate(2.0); // loop execution rate
 	int counter = 0;
-	while(ros::ok()) // loop as long as the node is running
-	{	
-		// float current_heading = get_current_heading();
-		// // ROS_INFO("Current headind %lf", current_heading_g);
+	 while (ros::ok()) {
+        switch (mode) {
+            case 0: { // Searching mode
+                ROS_INFO("Searching");
+                if (current_waypoint_index < waypoints.size()) {
+                    auto& target = waypoints[current_waypoint_index];
+                    set_global_position_and_yaw(target.latitude, target.longitude, target.altitude, n);
 
-		// geometry_msgs::Point current_location; 
-		// current_location = get_current_location();
-		// // ROS_INFO("Current location %lf", current_location.x);
-       
-		if (mode == 0) //SEARCHING MODE
-		{	
-			ROS_INFO("Searching");
+                    double current_distance = calculate_distance(current_position.latitude, current_position.longitude, target.latitude, target.longitude);
+                    ROS_INFO("Current distance to waypoint %zu: %f meters", current_waypoint_index, current_distance);
 
-                size_t current_waypoint_index = 0; // 当前目标点索引
-
-        while(ros::ok() && current_waypoint_index < waypoints.size()) {
-        auto& target = waypoints[current_waypoint_index];
-        set_global_position_and_yaw(target.latitude, target.longitude, target.altitude, nh);
-
-        double current_distance = calculate_distance(current_position.latitude, current_position.longitude, target.latitude, target.longitude);
-        ROS_INFO("Current distance to waypoint %lu: %f meters", current_waypoint_index, current_distance);
-
-        // 检查是否到达目标点（例如，距离小于10米）
-        if (current_distance < 0.05) {
-            ROS_INFO("Arrived at waypoint %lu.", current_waypoint_index);
-            current_waypoint_index++; // 移动到下一个目标点
-
-            if (current_waypoint_index >= waypoints.size()) {
-                ROS_INFO("All waypoints reached. Preparing to land.");
-                land();
+                    if (current_distance < 1) { // Threshold distance to waypoint
+                        ROS_INFO("Arrived at waypoint %zu.", current_waypoint_index++);
+                        if (current_waypoint_index >= waypoints.size()) {
+                            ROS_INFO("All waypoints reached. Preparing to land.");
+                            land();
+                            return 0; // End the program after landing
+                        }
+                    }
+                }
                 break;
+            }
+             case 1: {
+        ROS_INFO("Tracking");
+        if (update_target2) {
+            tg2 new_target = {current_position.latitude, current_position.longitude, 1.2};
+            double distance_to_last_target = calculate_distance(new_target.latitude, new_target.longitude, last_target.latitude, last_target.longitude);
 
+            const double DISTANCE_THRESHOLD = 1.0; // 10米阈值
+            if (distance_to_last_target > DISTANCE_THRESHOLD) {
+                target2 = new_target;
+                last_target = new_target;
+                update_target2 = false; // 已更新
             }
         }
         
+        if(t222 && !update_target2) {
+            set_global_position_and_yaw(target2.latitude, target2.longitude, 1.2, n);
+            double current_distance = calculate_distance(current_position.latitude, current_position.longitude, target2.latitude, target2.longitude);
+            ROS_INFO("Current distance to waypoint: %f meters", current_distance);
+
+            if (current_distance < 1) { // 到达阈值
+                ROS_INFO("Arrived at waypoint");
+                t222 = false; // 防止重复执行
+                break; // 结束当前case的执行
+            }
+        } else {
+            ROS_INFO("waypoint back");
+            mode = 0; // 更改模式
+        }
+        break; // 结束case 1
+    }
+            
+                
+                // This is where you would adjust the drone's pobreaksition based on the tracking data.
+                break;
+            }
+        
         ros::spinOnce();
         rate.sleep();
-
     }
-			// ros::spinOnce();
-		}
 
-		else if (mode == 1) //TRACKING MODE
-		{
-			// ros::spinOnce();
-			ROS_INFO("Tracking"); 
-            
-            
-			// ROS_INFO("Current headind %lf", current_heading_g);
-
-			//Should only be trigered if the bounding boxe is detected
-			// Otherwise the waypoints keep being updated with the last position of the drone and bounding boxe
-			// Can be put inside the callback function maybe ? 
-			// The update rate of the darknet ros is very slow that's a reason for this issue. 
-			// But it shows that if the bounding box is lost, the drones flies away. It should stop after reaching the next waypoint
-			
-			if(check_waypoint_reached(pose_tolerance, heading_tolerance) == 1)
-			{	
-				ros::Duration delay(5.0);
-			    // Sleep for the specified duration
-			    delay.sleep();
-				set_destination(trackingWaypoint.x, trackingWaypoint.y, target_alt, 0);
-				ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
-			}
-			
-		}	
-		rate.sleep();
-		ros::spinOnce();
-	}
-
-return 0;
+    return 0;
 }
