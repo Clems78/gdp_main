@@ -93,27 +93,6 @@ Coordinate localToGlobal(float drone_x, float drone_y, float drone_heading, floa
     return target_global;
 }
 
-// Coordinate getTrackingWaypoint(float current_pos_x, float current_pos_y, float currentHeading, float distanceToCentre_x, float distanceToCentre_y)
-// {
-// 	Coordinate trackingWaypoint;
-
-// 	float beta = -atan2(distanceToCentre_y, distanceToCentre_x) * 180/M_PI; //target angle from x middle axis (camera frame) 
-// 	ROS_INFO("center of frame to target angle：%lf", beta);
-// 	float gamma = beta - abs(currentHeading);
-// 	ROS_INFO("gamma：%lf", gamma);
-// 	float dist2centre = sqrt(pow(distanceToCentre_x, 2) + pow(distanceToCentre_y, 2));
-// 	ROS_INFO("Distance to centre of the frame is %lf", dist2centre);
-
-// 	gamma = gamma * M_PI/180;
-
-// 	trackingWaypoint.x = current_pos_x + dist2centre*cos(gamma);
-// 	trackingWaypoint.y = current_pos_y + dist2centre*sin(gamma);
-
-// 	ROS_INFO("Waypoint is x: %lf and y: %lf", trackingWaypoint.x, trackingWaypoint.y);
-
-// 	return trackingWaypoint;
-// }
-
 //Get global coordinates of the drone
 void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
 {
@@ -141,7 +120,7 @@ void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) //
 		string boxe_name = darknet_msg->bounding_boxes[i].Class.c_str();
 		// int detection_flag = 0;
 
-		if (boxe_name == "car") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
+		if (boxe_name == "person") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
 		{
 				ROS_INFO("%s detected", darknet_msg->bounding_boxes[i].Class.c_str());
 				ROS_INFO("detection flag in darknet_ros: %ld", detection_flag);
@@ -214,23 +193,6 @@ void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) //
 	}
 }
 
-// void pose_cb_test(const nav_msgs::Odometry::ConstPtr& msg)
-// {
-//   current_pose_g_test = *msg;
-//   enu_2_local(current_pose_g_test);
-//   float q0 = current_pose_g_test.pose.pose.orientation.w;
-//   float q1 = current_pose_g_test.pose.pose.orientation.x;
-//   float q2 = current_pose_g_test.pose.pose.orientation.y;
-//   float q3 = current_pose_g_test.pose.pose.orientation.z;
-//   float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
-//   //ROS_INFO("Current Heading %f ENU", psi*(180/M_PI));
-//   //Heading is in ENU
-//   //IS YAWING COUNTERCLOCKWISE POSITIVE?
-//   current_heading_g = psi*(180/M_PI) - local_offset_g;
-//   //ROS_INFO("Current Heading %f origin", current_heading_g);
-//   //ROS_INFO("x: %f y: %f z: %f", current_pose_g_test.pose.pose.position.x, current_pose_g_test.pose.pose.position.y, current_pose_g_test.pose.pose.position.z);
-// }
-
 // Main function with argument from the launch file 
 int main(int argc, char **argv) {
 
@@ -243,9 +205,6 @@ int main(int argc, char **argv) {
 
 	//Getting global coordinate
 	ros::Subscriber pos_sub = n.subscribe("/mavros/global_position/global", 1, pos_cb);
-
-	// currentPos_test = controlnode.subscribe<nav_msgs::Odometry>((ros_namespace + "/mavros/global_position/local").c_str(), 10, pose_cb_test);
-
 
 	//initialize control publisher/subscribers
 	init_publisher_subscriber(n);
@@ -295,11 +254,11 @@ int main(int argc, char **argv) {
 			// The update rate of the darknet ros is very slow that's a reason for this issue. 
 			// But it shows that if the bounding box is lost, the drones flies away. It should stop after reaching the next waypoint
 			
-			if(check_waypoint_reached(pose_tolerance, heading_tolerance) == 1)
-			{
-				set_destination(trackingWaypoint.x, trackingWaypoint.y, target_alt, 0);
-				ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
-			}
+			// if(check_waypoint_reached(pose_tolerance, heading_tolerance) == 1)
+			// {
+			// 	set_destination(trackingWaypoint.x, trackingWaypoint.y, target_alt, 0);
+			// 	ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
+			// }
 			
 		}	
 		rate.sleep();
