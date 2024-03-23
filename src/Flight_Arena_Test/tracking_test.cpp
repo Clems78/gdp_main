@@ -21,7 +21,7 @@ int img_center_y = height/2;
 
 //Pixel to metres topic 
 
-float pix2metres = 0.00332812; // Subscribes to pixel to metres topic // Need another callback function
+float pix2metres = 2*0.00332812; // Subscribes to pixel to metres topic // Need another callback function
 
 // Time after which the drone goes back to searching if the target is lost during tracking 
 int lost_target_time = 5;
@@ -149,7 +149,7 @@ void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) //
 		string boxe_name = darknet_msg->bounding_boxes[i].Class.c_str();
 		// int detection_flag = 0;
 
-		if (boxe_name == "car") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
+		if (boxe_name == "person") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
 		{
 				ROS_INFO("%s detected", darknet_msg->bounding_boxes[i].Class.c_str());
 				ROS_INFO("detection flag in darknet_ros: %ld", detection_flag);
@@ -183,7 +183,7 @@ void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) //
 				ros::Time timestamp = darknet_msg->header.stamp;
 
 			    // Print the timestamp
-			    ROS_INFO("Timestamp of bounding box message: %f", timestamp.toSec());
+			    // ROS_INFO("Timestamp of bounding box message: %f", timestamp.toSec());
 
 
 				// Get current location
@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
 
 
 	//specify control loop rate. We recommend a low frequency to not over load the FCU with messages. Too many messages will cause the drone to be sluggish
-	ros::Rate rate(2.0); // loop execution rate
+	ros::Rate rate(10.0); // loop execution rate
 	int counter = 0;
 	while(ros::ok()) // loop as long as the node is running
 	{	
