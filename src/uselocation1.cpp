@@ -13,8 +13,7 @@
 #include <mavros_msgs/State.h>
 
 // 假设这个头文件提供了所需的辅助函数如 init_publisher_subscriber(), wait4connect(), wait4start(), takeoff(), land()
-
-#include "gnc_functions.hpp"
+#include <gnc_functions_tim.hpp>
 
 sensor_msgs::NavSatFix current_position;
 std::atomic<bool> drone2_landed(false);
