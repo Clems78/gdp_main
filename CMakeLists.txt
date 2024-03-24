@@ -313,3 +313,6 @@ target_link_libraries(tk3 ${catkin_LIBRARIES})
 
 add_executable(search_detect_drone2 src/Flight_Arena_Test/search_detect_drone2.cpp)
 target_link_libraries(search_detect_drone2 ${catkin_LIBRARIES})
+
+add_executable(search_detect_hv_sl src/Flight_Arena_Test/search_detect_hv_sl.cpp)
+target_link_libraries(search_detect_hv_sl ${catkin_LIBRARIES})

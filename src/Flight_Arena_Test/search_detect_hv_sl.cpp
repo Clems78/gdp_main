@@ -18,6 +18,10 @@ using namespace std;
 /////////////////////////////////////////////// PARAMETERS ///////////////////////////////////////////////
 
 //Image width and height
+std::atomic<bool> drone2_landed(false);//should be false 21,191
+
+
+
 int width = 640;
 int height = 480;
 int img_center_x = width/2;
@@ -39,7 +43,7 @@ int detection_counter_rt = 0;
 int detection_counter = 0;
 ros::Time last_zero_detection_time;
 
-// 0 = searching // 1 = tracking
+// 0 = searching // 1=tracking
 int mode = 0;
 
 //const <msg package name>::<message>::ConstPtr& msg
@@ -161,27 +165,63 @@ std::vector<TargetPoint> waypoints = {
 {-35.36327480, 149.16521070, 603.7887287},
 };
 
+std::vector<TargetPoint> waypoints13 = {
+// Search Area 2
+//{-35.3632612, 149.1650909, 603.7887287},
+//{-35.36325830, 149.16515750, 603.7887287},
+{-35.36327360, 149.16521110, 603.7887287},
+{-35.36316200, 149.16521180, 603.7887287},
+{-35.36316200, 149.16522260, 603.7887287},
+{-35.36327380, 149.16522140, 603.7887287},
+{-35.36327340, 149.16523160, 603.7887287},
+{-35.36316230, 149.16523120, 603.7887287},
+{-35.36316260, 149.16524200, 603.7887287},
+{-35.36327210, 149.16524050, 603.7887287},
+{-35.36326250, 149.16525040, 603.7887287},
+{-35.36316170, 149.16525160, 603.7887287},
+{-35.36316200, 149.16526350, 603.7887287},
+{-35.36321050, 149.16526300, 603.7887287},
+//{-35.36325830, 149.16509110, 603.7887287},
+//{-35.36326070, 149.16509080, 603.7887287},
+};
+
+void drone2StateCallback(const mavros_msgs::State::ConstPtr& msg) {
+    // 根据状态消息判断无人机2是否已降落的逻辑
+    // 根据你表示降落的方式调整这里的逻辑
+    if (msg->armed == false) { // 假设通过AUTO.LAND模式或不处于armed状态来表示降落
+        drone2_landed.store(true);
+    } else {
+        drone2_landed.store(false); //应该是false
+    }
+}
+
 
 int main(int argc, char **argv) {
 
 	ros::init(argc, argv, "main"); //name of the node
 	ros::NodeHandle n; //enable connection to the ros network
+    ros::NodeHandle nn("/drone1");//drone number which we switch state
 
-	//	ros::Subscriber sub = <nodehandle>.subscribe("<topic>", <# of msg buffered>, <name of callback function>);
+  
+
+    ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("mavros/state", 10, drone2StateCallback); // 订阅无人机的状态
 	ros::Subscriber yolo_sub = n.subscribe("/darknet_ros/bounding_boxes", 10, yolo_cb); //1 = how many message buffered. default 1
-
 	ros::Subscriber object_count_sub = n.subscribe("/darknet_ros/found_object", 1, object_count_cb); //1 = how many message buffered. default 1
 
-	//initialize control publisher/subscribers
+
+
 	init_publisher_subscriber(n);
     ros::Subscriber position_sub = n.subscribe("/mavros/global_position/global", 10, globalPositionCallback);
-  	// wait for FCU connection
     wait4connect();
      
+
+
 	//create local reference frame 
 	initialize_local_frame();
     wait4start();
     takeoff(1.2);
+    bool waypoints2_added = false; // 用于标记是否已追加waypoints2
+
 	//specify control loop rate. We recommend a low frequency to not over load the FCU with messages. Too many messages will cause the drone to be sluggish
 	ros::Rate rate(5.0); // loop execution rate
 
@@ -193,7 +233,7 @@ int main(int argc, char **argv) {
 
 		if (mode == 0) //SEARCHING MODE
 		{	
-		 	ROS_INFO("Searching");
+		 ROS_INFO("Searching");
 	    auto& target = waypoints[current_waypoint_index];
         set_global_position_and_yaw(target.latitude, target.longitude, target.altitude, n);
 
@@ -202,14 +242,31 @@ int main(int argc, char **argv) {
 
         // 检查是否到达目标点（例如，距离小于10米）
         if (current_distance < pose_tolerance) {
+        ////////////////////////////////////////////////////Handover sript//////////////////////////////////////////////////////////////////////////////////
+        
+        
             ROS_INFO("Arrived at waypoint %lu.", current_waypoint_index);
             current_waypoint_index++; // 移动到下一个目标点
+        
+            //查看点到3了没有
+        
+        
+            if (current_waypoint_index > 3 && !waypoints2_added) {
+                if (drone2_landed.load()) {
+                    ROS_INFO("[%s] Drone 2 has landed. Appending additional waypoints.");
+                    waypoints.insert(waypoints.end(), waypoints13.begin(), waypoints13.end());
+                    waypoints2_added = true; // 标记waypoints2已被追加
+                }
+            }
+
 
             if (current_waypoint_index >= waypoints.size()) {
                 ROS_INFO("All waypoints reached. Preparing to land.");
                 land();
                 break;
             }
+
+
         }
 
         ros::spinOnce();
@@ -231,12 +288,14 @@ int main(int argc, char **argv) {
 			
 			tracking_flag = true;
 			ROS_INFO("MODE TO 0");
-		    if (current_distance < 1) { // 到达阈值
+			   if (current_distance < 1) { // 到达阈值
                 ROS_INFO("Arrived at waypoint");
                // t222 = false; // 防止重复执行
                 mode = 0;
-            ros::Duration delay(5.0);
-			delay.sleep();
+                
+                ros::Duration delay(5.0);
+			    delay.sleep();
+                last_zero_detection_time = ros::Time::now();
 		                    
 		     }	
 
