@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "gnc_node_drone1");
 
 
-    droneMission("~", waypoints,waypoints13);
+    droneMission("/drone1", waypoints,waypoints13);
     return 0;
 }
 

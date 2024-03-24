@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <darknet_ros_msgs/BoundingBoxes.h>
-#include <gnc_functions.hpp>
+#include <gnc_functions_tim.hpp>
 #include <sensor_msgs/NavSatFix.h>
 #include <geometry_msgs/Point.h>
 #include <cmath>
@@ -60,7 +60,7 @@ void yolo_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& yolo_msg) // callb
 			string boxe_name = yolo_msg->bounding_boxes[i].Class.c_str();
 			// int detection_flag = 0;
 
-			if (boxe_name == "person" ) // 
+			if (boxe_name == "car" ) // 
 			{
 				mode = 1;
 				ROS_INFO("MODE TO 1");
@@ -84,7 +84,7 @@ void object_count_cb(const darknet_ros_msgs::ObjectCount::ConstPtr& object_count
      ros::Duration elapsed_time = current_time - last_zero_detection_time;
  	 ROS_INFO("Time elapsed since last_zero_detection_time: %f seconds", elapsed_time.toSec());
 
-    if (tracking_flag == true && (ros::Time::now() - last_zero_detection_time).toSec() > 3.0)
+    if (tracking_flag == true && (ros::Time::now() - last_zero_detection_time).toSec() > 5.0)
     {
         tracking_flag = false;
         ROS_INFO("////////////////////Detection enabled again//////////////////:");
@@ -196,7 +196,7 @@ void drone2StateCallback(const mavros_msgs::State::ConstPtr& msg) {
 
 int main(int argc, char **argv) {
 
-	ros::init(argc, argv, "main"); //name of the node
+	ros::init(argc, argv, "hv1"); //name of the node
 	ros::NodeHandle n("/drone1"); //enable connection to the ros network
     ros::NodeHandle nn("/drone2");//drone number which we switch state
 
@@ -205,13 +205,13 @@ int main(int argc, char **argv) {
     ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("mavros/state", 10, drone2StateCallback); // 订阅无人机的状态
 
     
-	ros::Subscriber yolo_sub = n.subscribe("darknet_ros/bounding_boxes", 10, yolo_cb); //1 = how many message buffered. default 1
-	ros::Subscriber object_count_sub = n.subscribe("darknet_ros/found_object", 1, object_count_cb); //1 = how many message buffered. default 1
+	ros::Subscriber yolo_sub = n.subscribe("drone1/bounding_boxes", 10, yolo_cb); //1 = how many message buffered. default 1
+	ros::Subscriber object_count_sub = n.subscribe("drone1/object_count", 1, object_count_cb); //1 = how many message buffered. default 1
 
 
 
 	init_publisher_subscriber(n);
-    ros::Subscriber position_sub = n.subscribe("/mavros/global_position/global", 10, globalPositionCallback);
+    ros::Subscriber position_sub = n.subscribe("mavros/global_position/global", 10, globalPositionCallback);
     wait4connect();
      
 
@@ -288,7 +288,7 @@ int main(int argc, char **argv) {
 			
 			tracking_flag = true;
 			ROS_INFO("MODE TO 0");
-			   if (current_distance < 1) { // 到达阈值
+			   if (current_distance < 0.2) { // 到达阈值
                 ROS_INFO("Arrived at waypoint");
                // t222 = false; // 防止重复执行
                 mode = 0;
