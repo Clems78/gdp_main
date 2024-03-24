@@ -26,7 +26,7 @@ void globalPositionCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
 
 
 void set_global_position_and_yaw(double latitude, double longitude, double altitude, ros::NodeHandle& nh) {
-    ros::Publisher position_target_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("/mavros/setpoint_raw/global", 10);
+    ros::Publisher position_target_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("mavros/setpoint_raw/global", 10);
 
     // 确保发布者有时间来连接到ROS主题
     ros::Rate rate(20);
@@ -197,8 +197,8 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
     ros::NodeHandle nn("/drone2");
     init_publisher_subscriber(nh);
 
-    ros::Subscriber position_sub = nh.subscribe<sensor_msgs::NavSatFix>("/mavros/global_position/global", 10, globalPositionCallback);
-    ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("/mavros/state", 10, drone2StateCallback); // 订阅无人机2的状态
+    ros::Subscriber position_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 10, globalPositionCallback);
+    ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("mavros/state", 10, drone2StateCallback); // 订阅无人机2的状态
     wait4connect();
 
     set_mode("GUIDED");
