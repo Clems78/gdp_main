@@ -80,6 +80,10 @@ struct TargetPoint {
 
 
 std::vector<TargetPoint> waypoints = {
+
+
+
+
      //searching are 1 waypoints
   
 //{-35.3632670, 149.1650882, 603.7887287},
@@ -98,6 +102,9 @@ std::vector<TargetPoint> waypoints = {
 
 //{-35.36325650, 149.16510530, 603.7887287},
 //{-35.36325890, 149.16510530, 603.7887287},
+
+
+
 };
 
 
@@ -162,7 +169,6 @@ std::vector<TargetPoint> waypoints23 = {
   
 //{-35.3632670, 149.1650882, 603.7887287},
 //{-35.36325830, 149.16515750, 603.7887287},
-
 {-35.36327360, 149.16521110, 603.7887287},
 {-35.36324170, 149.16507850, 603.7887287},
 {-35.36324360, 149.16519760, 603.7887287},
@@ -224,9 +230,7 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
             if (current_waypoint_index > 3 && !waypoints2_added) {
                 if (drone2_landed.load()) {
                     ROS_INFO("[%s] Drone 2 has landed. Appending additional waypoints.", drone_ns.c_str());
-
                     waypoints.insert(waypoints.end(), waypoints2.begin(), waypoints2.end());
-
                     waypoints2_added = true; // 标记waypoints2已被追加
                 }
             }
@@ -240,7 +244,7 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
     if (current_waypoint_index >= waypoints.size()) {
         ROS_INFO("[%s] All waypoints reached. Switching to LOITER mode for hovering.", drone_ns.c_str());
         
-        ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
+        ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
         mavros_msgs::SetMode set_mode_srv;
         set_mode_srv.request.custom_mode = "LOITER";  // 设置为LOITER模式
         
@@ -255,8 +259,12 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
 int main(int argc, char **argv) {
     ros::init(argc, argv, "gnc_node_drone1");
 
-
     droneMission("/drone1", waypoints,waypoints13);
+
+<<<<<<< HEAD:src/uselocationf1.cpp
+=======
+    droneMission("/drone1", waypoints,waypoints13);
+>>>>>>> c973769e6611fbb1263722d5386b8375460ef99d:src/uselocation1.cpp
     return 0;
 }
 

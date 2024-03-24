@@ -247,7 +247,7 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
     if (current_waypoint_index >= waypoints.size()) {
         ROS_INFO("[%s] All waypoints reached. Switching to LOITER mode for hovering.", drone_ns.c_str());
         
-        ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
+        ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
         mavros_msgs::SetMode set_mode_srv;
         set_mode_srv.request.custom_mode = "LOITER";  // 设置为LOITER模式
         

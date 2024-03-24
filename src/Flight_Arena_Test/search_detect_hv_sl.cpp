@@ -196,17 +196,28 @@ void drone2StateCallback(const mavros_msgs::State::ConstPtr& msg) {
 
 int main(int argc, char **argv) {
 
+<<<<<<< HEAD
+	ros::init(argc, argv, "main"); //name of the node
+	ros::NodeHandle n("/drone2"); //enable connection to the ros network
+    ros::NodeHandle nn("/drone1");//drone number which we switch state
+=======
 	ros::init(argc, argv, "hv1"); //name of the node
 	ros::NodeHandle n("/drone1"); //enable connection to the ros network
     ros::NodeHandle nn("/drone2");//drone number which we switch state
+>>>>>>> c973769e6611fbb1263722d5386b8375460ef99d
 
   
 
     ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("mavros/state", 10, drone2StateCallback); // 订阅无人机的状态
+<<<<<<< HEAD
+	ros::Subscriber yolo_sub = n.subscribe("darknet_ros/bounding_boxes", 10, yolo_cb); //1 = how many message buffered. default 1
+	ros::Subscriber object_count_sub = n.subscribe("darknet_ros/found_object", 1, object_count_cb); //1 = how many message buffered. default 1
+=======
 
     
 	ros::Subscriber yolo_sub = n.subscribe("drone1/bounding_boxes", 10, yolo_cb); //1 = how many message buffered. default 1
 	ros::Subscriber object_count_sub = n.subscribe("drone1/object_count", 1, object_count_cb); //1 = how many message buffered. default 1
+>>>>>>> c973769e6611fbb1263722d5386b8375460ef99d
 
 
 
