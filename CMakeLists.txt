@@ -274,6 +274,10 @@ add_executable(uselocation2 src/uselocation2.cpp)
 target_link_libraries(uselocation2 ${catkin_LIBRARIES})
 
 
+add_executable(search_detect_store_drone2 src/search_detect_store_drone2.cpp)
+target_link_libraries(search_detect_store_drone2 ${catkin_LIBRARIES})
+
+
 
 ################
 ## REAL FLIGHT##

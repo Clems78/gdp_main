@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <darknet_ros_msgs/BoundingBoxes.h>
-#include <gnc_functions.hpp>
+#include <gnc_functions_tim.hpp>
 #include <sensor_msgs/NavSatFix.h>
 #include <geometry_msgs/Point.h>
 #include <cmath>
@@ -28,7 +28,7 @@ float target_alt = 1.2;
 
 //Check waypoints reached tolerance
 float pose_tolerance = 0.5; //metres
-float heading_tolerance = 7; //degrees
+float heading_tolerance = 10; //degrees
 
 /////////////////////////////////////////////// PARAMETERS ///////////////////////////////////////////////
 
@@ -62,6 +62,7 @@ void yolo_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& yolo_msg) // callb
 			{
 				mode = 1;
 				ROS_INFO("MODE TO 1");
+                // last_zero_detection_time = ros::Time::now();
 			}
 		}
 	}
@@ -82,7 +83,7 @@ void object_count_cb(const darknet_ros_msgs::ObjectCount::ConstPtr& object_count
      ros::Duration elapsed_time = current_time - last_zero_detection_time;
  	 ROS_INFO("Time elapsed since last_zero_detection_time: %f seconds", elapsed_time.toSec());
 
-    if (tracking_flag == true && (ros::Time::now() - last_zero_detection_time).toSec() > 3.0)
+    if (tracking_flag == true && (ros::Time::now() - last_zero_detection_time).toSec() > 10.0)
     {
         tracking_flag = false;
         ROS_INFO("////////////////////Detection enabled again//////////////////:");
@@ -165,7 +166,7 @@ std::vector<TargetPoint> waypoints = {
 int main(int argc, char **argv) {
 
 	ros::init(argc, argv, "main"); //name of the node
-	ros::NodeHandle n; //enable connection to the ros network
+	ros::NodeHandle n ("/drone2"); //enable connection to the ros network
 
 	//	ros::Subscriber sub = <nodehandle>.subscribe("<topic>", <# of msg buffered>, <name of callback function>);
 	ros::Subscriber yolo_sub = n.subscribe("/drone2/bounding_boxes", 10, yolo_cb); //1 = how many message buffered. default 1
@@ -193,57 +194,57 @@ int main(int argc, char **argv) {
 
 		if (mode == 0) //SEARCHING MODE
 		{	
-		 	ROS_INFO("Searching");
-	    auto& target = waypoints[current_waypoint_index];
-        set_global_position_and_yaw(target.latitude, target.longitude, target.altitude, n);
+    		 	ROS_INFO("Searching");
+    	    auto& target = waypoints[current_waypoint_index];
+            set_global_position_and_yaw(target.latitude, target.longitude, target.altitude, n);
 
-        double current_distance = calculate_distance(current_position.latitude, current_position.longitude, target.latitude, target.longitude);
-        // ROS_INFO("Current distance to waypoint %lu: %f meters", current_waypoint_index, current_distance);
+            double current_distance = calculate_distance(current_position.latitude, current_position.longitude, target.latitude, target.longitude);
+            // ROS_INFO("Current distance to waypoint %lu: %f meters", current_waypoint_index, current_distance);
 
-        // 检查是否到达目标点（例如，距离小于10米）
-        if (current_distance < pose_tolerance) {
-            ROS_INFO("Arrived at waypoint %lu.", current_waypoint_index);
-            current_waypoint_index++; // 移动到下一个目标点
+            // 检查是否到达目标点（例如，距离小于10米）
+            if (current_distance < pose_tolerance) 
+            {
+                ROS_INFO("Arrived at waypoint %lu.", current_waypoint_index);
+                current_waypoint_index++; // 移动到下一个目标点
 
-            if (current_waypoint_index >= waypoints.size()) {
-                ROS_INFO("All waypoints reached. Preparing to land.");
-                land();
-                break;
+                if (current_waypoint_index >= waypoints.size()) 
+                {
+                    ROS_INFO("All waypoints reached. Preparing to land.");
+                    land();
+                    break;
+                }
             }
-        }
 
-        ros::spinOnce();
-        rate.sleep();
+            rate.sleep();
+            ros::spinOnce();
 		}
 
 		else if (mode == 1) //TRACKING MODE
 		{
-			ROS_INFO("starting delay");
-	
+            tracking_flag = true;
 
-			float currentLatitude = current_position.latitude;
-			float currentLongitude = current_position.longitude;
-
+    		float currentLatitude = current_position.latitude;
+    		float currentLongitude = current_position.longitude;
 
             set_global_position_and_yaw(currentLatitude, currentLongitude, 1.2, n);
             double current_distance = calculate_distance(current_position.latitude, current_position.longitude, currentLatitude, currentLongitude);
-           // ROS_INFO("Current distance to waypoint: %f meters", current_distance);
-			
-			tracking_flag = true;
-			ROS_INFO("MODE TO 0");
-			   if (current_distance < 1) { // 到达阈值
-                ROS_INFO("Arrived at waypoint");
-               // t222 = false; // 防止重复执行
-                mode = 0;
-                
-            ros::Duration delay(5.0);
-			delay.sleep();
-		                    
-		     }	
+    		
+    		ROS_INFO("MODE TO 0");
 
-		rate.sleep();
-		ros::spinOnce();
-	}
-}
+		    if (current_distance < 0.3) 
+            { 
+                ROS_INFO("Arrived at waypoint");
+                mode = 0;
+                ROS_INFO("starting delay");
+                ros::Duration delay(5.0);
+    		    delay.sleep();
+                last_zero_detection_time = ros::Time::now();            
+    	    }
+
+            rate.sleep();
+            ros::spinOnce();
+	    }
+    }
+
 return 0;
 }
