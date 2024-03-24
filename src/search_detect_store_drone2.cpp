@@ -219,6 +219,7 @@ void already_tracked_cb(const gdp_main::CoordinateList::ConstPtr& already_tracke
         {
             mode = 1; //Set to tracking 
             ROS_INFO("New target, commencing tracking !");
+            tracked_vehicle_pos_pub.publish(position_msg);
         }
     }
 }
@@ -253,9 +254,18 @@ int main(int argc, char **argv) {
 
     ros::Subscriber object_count_sub = n.subscribe("/darknet_ros/found_object", 1, object_count_cb); //1 = how many message buffered. default 1
 
+    //Getting coordinate of already tracked vehicle 
+    ros::Subscriber already_tracked_sub = n.subscribe("/all_tracked_vehicle_coords", 1, already_tracked_cb);
+
+    ros::Subscriber position_sub = n.subscribe("/mavros/global_position/global", 10, globalPositionCallback);
+
+    // Publish the position of the tracked vechile on another node
+    tracked_vehicle_pos_pub = n.advertise<geometry_msgs::Point>("tracked_vehicle_pos", 1); //1000 is the queue size
+
+
     //initialize control publisher/subscribers
     init_publisher_subscriber(n);
-    ros::Subscriber position_sub = n.subscribe("/mavros/global_position/global", 10, globalPositionCallback);
+
     // wait for FCU connection
     wait4connect();
      
