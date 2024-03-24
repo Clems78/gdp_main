@@ -170,9 +170,7 @@ std::vector<TargetPoint> waypoints23 = {
   
 //{-35.3632670, 149.1650882, 603.7887287},
 //{-35.36325830, 149.16515750, 603.7887287},
-{-35.36321050, 149.16523120, 603.7887287}, 
-{-35.36324170, 149.16523120, 603.7887287},   
-
+{-35.36327360, 149.16521110, 603.7887287},
 {-35.36324170, 149.16507850, 603.7887287},
 {-35.36324360, 149.16519760, 603.7887287},
 {-35.36325070, 149.16519780, 603.7887287},
@@ -203,11 +201,11 @@ void drone2StateCallback(const mavros_msgs::State::ConstPtr& msg) {
 
 void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoints, std::vector<TargetPoint>& waypoints2) {
     ros::NodeHandle nh(drone_ns);
-    ros::NodeHandle nn("/drone1");
+    ros::NodeHandle nn("/drone2");
     init_publisher_subscriber(nh);
 
     ros::Subscriber position_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 10, globalPositionCallback);
-    ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("mavros/state", 10, drone2StateCallback); // 订阅无人机的状态
+    ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("mavros/state", 10, drone2StateCallback); // 订阅无人机2的状态
     wait4connect();
 
     set_mode("GUIDED");
@@ -247,7 +245,7 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
     if (current_waypoint_index >= waypoints.size()) {
         ROS_INFO("[%s] All waypoints reached. Switching to LOITER mode for hovering.", drone_ns.c_str());
         
-        ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
+        ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
         mavros_msgs::SetMode set_mode_srv;
         set_mode_srv.request.custom_mode = "LOITER";  // 设置为LOITER模式
         
@@ -259,12 +257,10 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
     }
 }
 
-
-
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "gnc_node_drone2");
+    ros::init(argc, argv, "gnc_node_drone1");
 
-    droneMission("/drone2", waypoints2,waypoints23);
+    droneMission("/drone1", waypoints,waypoints13);
 
     return 0;
 }
