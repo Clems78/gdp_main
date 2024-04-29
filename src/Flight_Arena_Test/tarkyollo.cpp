@@ -117,11 +117,11 @@ void set_global_position_and_yaw(double latitude, double longitude, double altit
     target.latitude = latitude;
     target.longitude = longitude;
     target.altitude = 585.2;
-    // target.yaw = M_PI / 2; //  est rad
-    target.yaw =  0;        // north 
-     //target.yaw =  M_PI;     // south
-   // target.yaw = 3*M_PI/2;   //  west
-
+    // target.yaw = M_PI / 2;    // est rad
+    target.yaw =  0;             // north 
+     //target.yaw =  M_PI;       // south
+     // target.yaw = 3*M_PI/2;   // west
+    
     
     position_target_pub.publish(target);
 }
@@ -218,9 +218,11 @@ int main(int argc, char **argv) {
 
 		else if (mode == 1) //TRACKING MODE
 		{
+
+        
 			ROS_INFO("starting delay");
 	
-
+    
 			float currentLatitude = current_position.latitude;
 			float currentLongitude = current_position.longitude;
 

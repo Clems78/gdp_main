@@ -11,6 +11,7 @@ using namespace std;
 /////////////////////////////////////////////// PARAMETERS ///////////////////////////////////////////////
 
 //Re tracking distance threshold
+
 float tracking_coord_threshold = 0.001;
 
 //Image width and height

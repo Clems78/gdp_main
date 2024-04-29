@@ -267,18 +267,21 @@ target_link_libraries(apf1 ${catkin_LIBRARIES})
 add_executable(apf2 src/apf2.cpp)
 target_link_libraries(apf2 ${catkin_LIBRARIES})
 
-add_executable(uselocation1 src/uselocation1.cpp)
-target_link_libraries(uselocation1 ${catkin_LIBRARIES})
+add_executable(uselocationf1 src/uselocationf1.cpp)
+target_link_libraries(uselocationf1 ${catkin_LIBRARIES})
 
-add_executable(uselocation2 src/uselocation2.cpp)
-target_link_libraries(uselocation2 ${catkin_LIBRARIES})
+add_executable(uselocationf2 src/uselocationf2.cpp)
+target_link_libraries(uselocationf2 ${catkin_LIBRARIES})
 
 
 add_executable(search_detect_store_drone2 src/search_detect_store_drone2.cpp)
 target_link_libraries(search_detect_store_drone2 ${catkin_LIBRARIES})
 
+add_executable(uselocation_tracking src/uselocation_tracking.cpp)
+target_link_libraries(uselocation_tracking ${catkin_LIBRARIES})
 
-
+add_executable(uselocation_tracking2 src/uselocation_tracking2.cpp)
+target_link_libraries(uselocation_tracking2 ${catkin_LIBRARIES})
 ################
 ## REAL FLIGHT##
 ################
@@ -318,8 +321,3 @@ target_link_libraries(tk3 ${catkin_LIBRARIES})
 add_executable(search_detect_drone2 src/Flight_Arena_Test/search_detect_drone2.cpp)
 target_link_libraries(search_detect_drone2 ${catkin_LIBRARIES})
 
-add_executable(search_detect_hv_sl src/Flight_Arena_Test/search_detect_hv_sl.cpp)
-target_link_libraries(search_detect_hv_sl ${catkin_LIBRARIES})
-
-add_executable(search_detect_hv2 src/Flight_Arena_Test/search_detect_hv2.cpp)
-target_link_libraries(search_detect_hv2 ${catkin_LIBRARIES})

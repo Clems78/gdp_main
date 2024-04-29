@@ -57,11 +57,18 @@ int first_tracking_waypoint = 0;
 //Detection flag
 int detection_flag = 0;
 
+//Publisher//
+//tracked vehicle coordinate publisher 
 ros::Publisher tracked_vehicle_pos_pub;
 
-
+//Initialise tracked vehicle coordinate message
 geometry_msgs::Point position_msg;
 
+
+
+//subscriber
+// ros::Subscriber currentPos_test;
+// nav_msgs::Odometry current_pose_g_test;
 
 //Altitude local frame
 float alt_local;
@@ -121,27 +128,84 @@ void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
     position_msg.z = altitude;
 }
 
+// //Get local coordinates of the drone
+// void loc_pos_cb(const nav_msgs::Odometry::ConstPtr& loc_pos_msg)
+// {
+// 	//Extract data
+// 	alt_local = loc_pos_msg->pose.pose.position.z;
+
+// }
 
 //const <msg package name>::<message>::ConstPtr& msg
-/*void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) // callback function
+void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg) // callback function
 {
 	ROS_INFO("darknet loop");
 	// ROS_INFO("mode :  %ld", mode);
-
 	for (int i=0; i<darknet_msg->bounding_boxes.size(); i++ ) // run on each bouding box that is in the message
 	{
 		// ROS_INFO("%s detected", darknet_msg->bounding_boxes[i].Class.c_str()); //convert into a char array that can be used by ros; print detected object
 
 		string boxe_name = darknet_msg->bounding_boxes[i].Class.c_str();
-		// int detection_flag = 0;
+		 int detection_flag = 0;
 
 		if (boxe_name == "person") // condition should be changed to "rccars" We could also restrict the detection of Yolo to only rc cars and remove all the other classes to prevent issues
 		{
 				ROS_INFO("%s detected", darknet_msg->bounding_boxes[i].Class.c_str());
 				ROS_INFO("detection flag in darknet_ros: %ld", detection_flag);
 				mode = 1;
-				target_lost_counter = 0; // put back target lost counter to 0
-	  
+
+				target_lost_counter = 0;
+
+
+
+
+			    // put back target lost counter to 0
+    
+	
+				//Get the center 
+			/*	float bb_center_x = xMin + (xMax - xMin) / 2;
+				float bb_center_y = yMin + (yMax - yMin) / 2;
+				//ROS_INFO("Bounding Box center coordinates: (%lf, %lf)", bb_center_x, bb_center_y);
+
+				//Compute distance to image center in pixel
+				float pix_dist2center_x = bb_center_x - img_center_x;
+				float pix_dist2center_y = bb_center_y - img_center_y;
+				//ROS_INFO("Center is %lf pixels away in x and %lf pixels away in y", pix_dist2center_x, pix_dist2center_y);
+
+				ros::Time timestamp = darknet_msg->header.stamp;
+
+			    // Print the timestamp
+			    ROS_INFO("Timestamp of bounding box message: %f", timestamp.toSec());
+
+
+				// Get current location
+				geometry_msgs::Point current_pos;
+				current_pos = get_current_location(); //In regards to the "local frame" created at takeoff	
+				ROS_INFO("current position x: %lf y:%lf z:%lf",current_pos.x, current_pos.y, current_pos.z);
+
+				//Get current heading 
+				float current_heading = get_current_heading();
+				ROS_INFO("Current heading: %lf", current_heading);			
+
+			
+
+				//Convert into metres
+				P2M p2m = getPix2Metres(current_pos.z);
+				double dist2center_x = pix_dist2center_x * p2m.x ; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 	
+				double dist2center_y = pix_dist2center_y * p2m.y; // NEED TO SUBSCRIBE TO PIXEL TO METRES TOPIC 
+				ROS_INFO("Distance to center in x :%lf and y: %lf", dist2center_x, dist2center_y);			
+
+
+				trackingWaypoint = localToGlobal(current_pos.x, current_pos.y, current_heading * M_PI/180, dist2center_x, dist2center_y);
+				ROS_INFO("Waypoint coordinate in x:%lf and y: %lf", trackingWaypoint.x, trackingWaypoint.y);*/
+              /*  land();
+				//set_mode("LOITER");
+                ros::Duration delay(5.0);
+			    // Sleep for the specified duration
+			    delay.sleep();
+			    
+			    takeoff(1.2);*/			    
+				break;
 		}
 
 		//Condition for going back to search mode after a certain amount of time if the target is lost ie box_name = empty
@@ -152,7 +216,7 @@ void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
 				//Rate for target lost
 				ros::Rate target_lost_rate(1);
 				while (ros::ok())
-				{	
+				{
 					ROS_INFO("Target lost ! Back to searching in %ld seconds", lost_target_time - target_lost_counter);
 					target_lost_counter++;
 					target_lost_rate.sleep(); //Ensure that the loop runs once per second
@@ -166,38 +230,26 @@ void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
 			}	
 		}	
 	}
-}*/
-void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg)
-{
-    ROS_INFO("darknet loop");
-    bool person_detected = false; // 用于跟踪是否检测到人
-
-    for (int i = 0; i < darknet_msg->bounding_boxes.size(); i++)
-    {
-        std::string box_name = darknet_msg->bounding_boxes[i].Class;
-        if (box_name == "person")
-        {
-            // 如果检测到人，打印信息并设置标志位
-            ROS_INFO("%s detected", box_name.c_str());
-            person_detected = true;
-            break; // 检测到人后即退出循环
-        }
-    }
-
-    // 根据是否检测到人来设置模式
-    if (person_detected)
-    {
-        ROS_INFO("Person detected, switching to mode 1 (tracking mode).");
-        mode = 1;
-        target_lost_counter = 0; // 重置目标丢失计数器
-    }
-    else
-    {
-        ROS_INFO("No person detected, switching to mode 0 (searching mode).");
-        mode = 0;
-    }
 }
 
+// void pose_cb_test(const nav_msgs::Odometry::ConstPtr& msg)
+// {
+//   current_pose_g_test = *msg;
+//   enu_2_local(current_pose_g_test);
+//   float q0 = current_pose_g_test.pose.pose.orientation.w;
+//   float q1 = current_pose_g_test.pose.pose.orientation.x;
+//   float q2 = current_pose_g_test.pose.pose.orientation.y;
+//   float q3 = current_pose_g_test.pose.pose.orientation.z;
+//   float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
+//   //ROS_INFO("Current Heading %f ENU", psi*(180/M_PI));
+//   //Heading is in ENU
+//   //IS YAWING COUNTERCLOCKWISE POSITIVE?
+//   current_heading_g = psi*(180/M_PI) - local_offset_g;
+//   //ROS_INFO("Current Heading %f origin", current_heading_g);
+//   //ROS_INFO("x: %f y: %f z: %f", current_pose_g_test.pose.pose.position.x, current_pose_g_test.pose.pose.position.y, current_pose_g_test.pose.pose.position.z);
+// }
+
+// Main function with argument from the launch file 
 sensor_msgs::NavSatFix current_position;
 
 void globalPositionCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
@@ -288,11 +340,19 @@ int main(int argc, char **argv) {
     ros::Subscriber position_sub = nh.subscribe("/mavros/global_position/global", 10, globalPositionCallback);
     
 	//	ros::Subscriber sub = <nodehandle>.subscribe("<topic>", <# of msg buffered>, <name of callback function>);
-	
 	ros::Subscriber darknet_sub = n.subscribe("/darknet_ros/bounding_boxes", 1, darknet_cb); //1 = how many message buffered. default 1
+	// AS long as there is no new messages in this topic, the callback function is not entered
+
+	//Getting global coordinate
 	ros::Subscriber pos_sub = n.subscribe("/mavros/global_position/global", 1, pos_cb);
 
+	//Getting local coordinate
+	// ros::Subscriber loc_pos_sub = n.subscribe("/mavros/global_position/local", 1, loc_pos_cb);
 
+	// currentPos_test = controlnode.subscribe<nav_msgs::Odometry>((ros_namespace + "/mavros/global_position/local").c_str(), 10, pose_cb_test);
+
+
+	//initialize control publisher/subscribers
 	init_publisher_subscriber(n);
 
   	// wait for FCU connection
@@ -304,7 +364,7 @@ int main(int argc, char **argv) {
 	//wait4start();
     takeoff(1.2);
 	//Set speed
-	set_speed(0.5);
+	set_speed(1);
 
 
 	//specify control loop rate. We recommend a low frequency to not over load the FCU with messages. Too many messages will cause the drone to be sluggish
@@ -312,13 +372,18 @@ int main(int argc, char **argv) {
 	int counter = 0;
 	while(ros::ok()) // loop as long as the node is running
 	{	
+		// float current_heading = get_current_heading();
+		// // ROS_INFO("Current headind %lf", current_heading_g);
 
+		// geometry_msgs::Point current_location; 
+		// current_location = get_current_location();
+		// // ROS_INFO("Current location %lf", current_location.x);
        
 		if (mode == 0) //SEARCHING MODE
 		{	
 			ROS_INFO("Searching");
 
-            size_t current_waypoint_index = 0; // 当前目标点索引
+                size_t current_waypoint_index = 0; // 当前目标点索引
 
         while(ros::ok() && current_waypoint_index < waypoints.size()) {
         auto& target = waypoints[current_waypoint_index];
@@ -340,21 +405,36 @@ int main(int argc, char **argv) {
             }
         }
         
-   
+       ros::spinOnce();
+        rate.sleep();
+
     }
 			// ros::spinOnce();
 		}
 
 		else if (mode == 1) //TRACKING MODE
 		{
-			
+			// ros::spinOnce();
 			ROS_INFO("Tracking"); 
-			
-            takeoff (1.5);
-           
-            mode = 0; // 切换回搜索模式
+
             
-	
+			// ROS_INFO("Current headind %lf", current_heading_g);
+
+			//Should only be trigered if the bounding boxe is detected
+			// Otherwise the waypoints keep being updated with the last position of the drone and bounding boxe
+			// Can be put inside the callback function maybe ? 
+			// The update rate of the darknet ros is very slow that's a reason for this issue. 
+			// But it shows that if the bounding box is lost, the drones flies away. It should stop after reaching the next waypoint
+			
+			if(check_waypoint_reached(pose_tolerance, heading_tolerance) == 1)
+			{	
+				ros::Duration delay(5.0);
+			    // Sleep for the specified duration
+			    delay.sleep();
+				set_destination(trackingWaypoint.x, trackingWaypoint.y, target_alt, 0);
+				ROS_INFO("Waypoint set to: x:%lf y:%lf", trackingWaypoint.x, trackingWaypoint.y);
+				
+			}
 			
 		}	
 		rate.sleep();

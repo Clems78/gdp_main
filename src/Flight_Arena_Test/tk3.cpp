@@ -139,7 +139,7 @@ void pos_cb(const sensor_msgs::NavSatFix::ConstPtr& pos_msg)
 // 	alt_local = loc_pos_msg->pose.pose.position.z;
 
 // }
-
+bool person_detected = false;
 
 //const <msg package name>::<message>::ConstPtr& msg
 void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg)
@@ -155,15 +155,20 @@ void darknet_cb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& darknet_msg)
             target_lost_counter = 0; // Reset the counter since we've found our target
             break; // Exit the loop early since we've found what we're looking for
         }
+        else
+        {
+        person_detected = false;
+        break;	
+        }
     }
 
-    if (person_detected) {
+   /* if (person_detected) {
         mode = 1; // Switch to tracking mode
     } else {
         ROS_INFO("No person detected, switching to search mode.");
         mode = 0; // Switch back to search mode
     }
-
+*/
     // You might want to handle the target_lost_counter logic outside of this callback
     // For example, you could use a separate timer to increment the counter and check the mode
 }
@@ -323,6 +328,7 @@ int main(int argc, char **argv) {
                 }
                 break;
             }
+
              case 1: {
         ROS_INFO("Tracking");
         if (update_target2) {
@@ -344,12 +350,12 @@ int main(int argc, char **argv) {
 
             if (current_distance < 1) { // 到达阈值
                 ROS_INFO("Arrived at waypoint");
-                t222 = false; // 防止重复执行
+               // t222 = false; // 防止重复执行
                 break; // 结束当前case的执行
             }
         } else {
             ROS_INFO("waypoint back");
-            mode = 0; // 更改模式
+           // mode = 0; // 更改模式
         }
         break; // 结束case 1
     }

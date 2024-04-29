@@ -31,12 +31,6 @@
       <include>
         <uri>model://iris_with_standoffs_demo</uri>
       </include>
-
-
-
-
-
-
       <!-- add new camera -->
       <link name='camera'>
         <pose>0 -0.01 0.070 .8 0 1.57</pose>
