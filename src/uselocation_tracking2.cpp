@@ -307,7 +307,8 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
     ros::NodeHandle nh(drone_ns);
     ros::Subscriber yolo_sub = nh.subscribe("/drone2/bounding_boxes", 10, yolo_cb); //1 = how many message buffered. default 1
     ros::Subscriber object_count_sub = nh.subscribe("/drone2/object_count", 1, object_count_cb); //1 = how many message buffered. default 1
-
+    ros::Subscriber position_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 10, globalPositionCallback);
+    ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("mavros/state", 10, drone2StateCallback); //                                       订阅无人机2的状态
 
     ////////////////////changes
 
@@ -315,8 +316,7 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
     ros::NodeHandle nn("/drone1");
     init_publisher_subscriber(nh);
 
-    ros::Subscriber position_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 10, globalPositionCallback);
-    ros::Subscriber state_sub = nn.subscribe<mavros_msgs::State>("mavros/state", 10, drone2StateCallback); // 订阅无人机2的状态
+
     wait4connect();
 
     set_mode("GUIDED");

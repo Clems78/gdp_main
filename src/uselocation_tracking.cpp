@@ -30,7 +30,7 @@
 
 
 sensor_msgs::NavSatFix current_position;
-std::atomic<bool> drone2_landed(true); // should be flase
+std::atomic<bool> drone2_landed(flase); // should be flase
 
 
 void globalPositionCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
@@ -211,7 +211,7 @@ void drone2StateCallback(const mavros_msgs::State::ConstPtr& msg) {
     if (msg->armed == false) { // 假设通过AUTO.LAND模式或不处于armed状态来表示降落
         drone2_landed.store(true);
     } else {
-        drone2_landed.store(true); //应该是false
+        drone2_landed.store(false); //应该是false
     }
 }
 
@@ -302,8 +302,8 @@ void object_count_cb(const darknet_ros_msgs::ObjectCount::ConstPtr& object_count
 
 void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoints, std::vector<TargetPoint>& waypoints2) {
     ros::NodeHandle nh(drone_ns);
-    ros::Subscriber yolo_sub = nh.subscribe("/drone2/bounding_boxes", 10, yolo_cb); //1 = how many message buffered. default 1
-    ros::Subscriber object_count_sub = nh.subscribe("/drone2/object_count", 1, object_count_cb); //1 = how many message buffered. default 1
+    ros::Subscriber yolo_sub = nh.subscribe("/drone1/bounding_boxes", 10, yolo_cb); //1 = how many message buffered. default 1
+    ros::Subscriber object_count_sub = nh.subscribe("/drone1/object_count", 1, object_count_cb); //1 = how many message buffered. default 1
     ros::NodeHandle nn("/drone1");
     init_publisher_subscriber(nh);
     ros::Subscriber position_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 10, globalPositionCallback);
@@ -421,7 +421,7 @@ void droneMission(const std::string& drone_ns, std::vector<TargetPoint>& waypoin
 int main(int argc, char **argv) {
     ros::init(argc, argv, "gnc_node_drone1");
 
-    droneMission("/drone2", waypoints,waypoints13);
+    droneMission("/drone1", waypoints,waypoints13);
 
     return 0;
 }
